@@ -11,4 +11,17 @@ function Get-CESafeName {
     return [regex]::Replace($Name, '[^A-Za-z0-9._-]', '_')
 }
 
-Export-ModuleMember -Function Get-CESafeName
+function Test-CETagNameFilter {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$Name,
+        [Parameter(Mandatory)][AllowEmptyCollection()][string[]]$NameLike,
+        [Parameter(Mandatory)][AllowEmptyCollection()][string[]]$NameNotLike
+    )
+    $included = ($NameLike.Count -eq 0) -or ($NameLike | Where-Object { $Name -like $_ }).Count -gt 0
+    if (-not $included) { return $false }
+    $excluded = ($NameNotLike | Where-Object { $Name -like $_ }).Count -gt 0
+    return -not $excluded
+}
+
+Export-ModuleMember -Function Get-CESafeName, Test-CETagNameFilter
