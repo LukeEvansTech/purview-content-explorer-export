@@ -56,6 +56,52 @@ if (-not $DryRun) {
     }
 }
 
-# --- Enumeration, filtering, dispatch, roll-up come in later tasks ---
-Write-Host "DryRun=$DryRun TagTypes=$($TagTypes -join ',') Workloads=$($Workloads -join ',')"
-Write-Host 'Stub — enumeration not implemented yet.'
+function Get-CETagInventory {
+    param(
+        [string[]]$TagTypes,
+        [string[]]$NameLike,
+        [string[]]$NameNotLike
+    )
+    $inventory = New-Object System.Collections.Generic.List[object]
+
+    foreach ($tt in $TagTypes) {
+        $map = Get-CETagTypeEnumeration -TagType $tt
+        $cmdlet = $map.Cmdlet
+        $nameProp = $map.NameProperty
+
+        if (-not (Get-Command $cmdlet -ErrorAction SilentlyContinue)) {
+            Write-Warning "${tt}: cmdlet '$cmdlet' not available in this session. Skipping. (For TrainableClassifier, supply names via -NameLike against a known list, or omit this TagType.)"
+            continue
+        }
+
+        Write-Host "enumerating $tt via $cmdlet..."
+        try {
+            $items = & $cmdlet -ErrorAction Stop
+        } catch {
+            Write-Warning "$tt enumeration failed: $($_.Exception.Message)"
+            continue
+        }
+
+        foreach ($item in $items) {
+            $name = $item.$nameProp
+            if (-not $name) { continue }
+            if (-not (Test-CETagNameFilter -Name $name -NameLike $NameLike -NameNotLike $NameNotLike)) { continue }
+            $inventory.Add([pscustomobject]@{ TagType = $tt; TagName = $name })
+        }
+    }
+    return ,$inventory.ToArray()
+}
+
+$inventory = Get-CETagInventory -TagTypes $TagTypes -NameLike $NameLike -NameNotLike $NameNotLike
+Write-Host ("found {0} tag(s) after filtering:" -f $inventory.Count)
+$inventory | Group-Object TagType | ForEach-Object {
+    Write-Host ("  {0}: {1}" -f $_.Name, $_.Count)
+}
+
+if ($DryRun) {
+    $inventory | Format-Table -AutoSize | Out-String | Write-Host
+    return
+}
+
+# --- Dispatch + roll-up come in later tasks ---
+Write-Host 'Stub — dispatch loop not implemented yet.'
