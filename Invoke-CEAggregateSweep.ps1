@@ -103,5 +103,52 @@ if ($DryRun) {
     return
 }
 
-# --- Dispatch + roll-up come in later tasks ---
-Write-Host 'Stub — dispatch loop not implemented yet.'
+$logFile = Join-Path $OutDir 'sweep.log'
+$workerScript = Join-Path $PSScriptRoot 'Export-CEAggregate.ps1'
+
+$counts = @{ processed = 0; succeeded = 0; skipped = 0; failed = 0 }
+
+function Write-SweepLog {
+    param([string]$Status, [string]$TagType, [string]$TagName, [string]$Detail)
+    $ts = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+    $line = "{0}  {1,-7} {2,-26} {3,-50} {4}" -f $ts, $Status, $TagType, ('"' + $TagName + '"'), $Detail
+    Add-Content -Path $logFile -Value $line
+    Write-Host $line
+}
+
+foreach ($tag in $inventory) {
+    $counts.processed++
+    $safeName = Get-CESafeName $tag.TagName
+    $expectedFile = Join-Path $OutDir ("aggregate_{0}_{1}.csv" -f $tag.TagType, $safeName)
+
+    if ((Test-Path $expectedFile) -and -not $Force) {
+        Write-SweepLog -Status 'skip' -TagType $tag.TagType -TagName $tag.TagName -Detail 'exists'
+        $counts.skipped++
+        continue
+    }
+
+    try {
+        & $workerScript `
+            -TagType $tag.TagType `
+            -TagName $tag.TagName `
+            -Workloads $Workloads `
+            -OutDir $OutDir `
+            -PageSize $PageSize `
+            -Force:$Force
+
+        $rowCount = 0
+        if (Test-Path $expectedFile) {
+            # Subtract 1 for the header row.
+            $rowCount = [Math]::Max(0, (Get-Content $expectedFile | Measure-Object -Line).Lines - 1)
+        }
+        Write-SweepLog -Status 'ok' -TagType $tag.TagType -TagName $tag.TagName -Detail "rows=$rowCount"
+        $counts.succeeded++
+    }
+    catch {
+        Write-SweepLog -Status 'fail' -TagType $tag.TagType -TagName $tag.TagName -Detail $_.Exception.Message
+        $counts.failed++
+    }
+}
+
+# --- Roll-up + final summary come in Task 11 ---
+Write-Host ('processed={0} succeeded={1} skipped={2} failed={3}' -f $counts.processed, $counts.succeeded, $counts.skipped, $counts.failed)
