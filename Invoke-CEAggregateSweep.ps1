@@ -9,8 +9,10 @@ Sweeps Content Explorer aggregate data across all (or filtered) tags and workloa
 #>
 [CmdletBinding()]
 param(
+    # Defaults to SensitiveInformationType only — the typical use case. Pass
+    # -TagTypes Retention,Sensitivity,TrainableClassifier (or any subset) to widen.
     [ValidateSet('Retention','SensitiveInformationType','Sensitivity','TrainableClassifier')]
-    [string[]]$TagTypes = @('Retention','SensitiveInformationType','Sensitivity','TrainableClassifier'),
+    [string[]]$TagTypes = @('SensitiveInformationType'),
 
     [string[]]$NameLike = @('*'),
     [string[]]$NameNotLike = @(),

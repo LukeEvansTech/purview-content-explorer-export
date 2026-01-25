@@ -19,18 +19,21 @@ Connect-IPPSSession
 # 2. Dry-run to see the planned (TagType, TagName) list without exporting.
 ./Invoke-CEAggregateSweep.ps1 -DryRun
 
-# 3. Full sweep — defaults to all four TagTypes and all four workloads.
+# 3. Full SIT sweep — defaults to all SensitiveInformationTypes across all four workloads.
 ./Invoke-CEAggregateSweep.ps1
 ```
 
 ## Common scenarios
 
 ```powershell
-# Sweep just Sensitive Information Types whose name starts with "Credit".
-./Invoke-CEAggregateSweep.ps1 -TagTypes SensitiveInformationType -NameLike 'Credit*'
+# Default is SensitiveInformationType only. Add more tag types explicitly:
+./Invoke-CEAggregateSweep.ps1 -TagTypes SensitiveInformationType,Sensitivity,Retention
 
-# Sweep everything except built-in default Sensitivity labels.
-./Invoke-CEAggregateSweep.ps1 -NameNotLike 'Default *','General','Public'
+# Narrow to one tag-name pattern.
+./Invoke-CEAggregateSweep.ps1 -NameLike 'Credit*'
+
+# Sensitivity-label-only sweep.
+./Invoke-CEAggregateSweep.ps1 -TagTypes Sensitivity
 
 # Re-run only failed/missing tags (default behaviour — skip-existing is on).
 ./Invoke-CEAggregateSweep.ps1
