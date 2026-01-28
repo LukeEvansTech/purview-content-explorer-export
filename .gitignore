@@ -1,3 +1,6 @@
 output/
 *.log
 .vscode/
+.DS_Store
+.claude/
+testResults.xml
