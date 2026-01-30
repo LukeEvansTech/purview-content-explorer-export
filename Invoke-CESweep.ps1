@@ -173,8 +173,10 @@ foreach ($tag in $inventory) {
 
 # --- Roll-up: concatenate all per-tag CSVs into items_all.csv ---
 $rollupFile = Join-Path $OutDir 'items_all.csv'
-$perTagFiles = Get-ChildItem -Path $OutDir -Filter 'items_*.csv' |
-    Where-Object { $_.Name -ne 'items_all.csv' }
+# @(...) wrap forces an array even when Get-ChildItem returns a single FileInfo —
+# Set-StrictMode -Version Latest rejects .Count on a scalar.
+$perTagFiles = @(Get-ChildItem -Path $OutDir -Filter 'items_*.csv' |
+    Where-Object { $_.Name -ne 'items_all.csv' })
 
 if ($perTagFiles.Count -gt 0) {
     Write-Host "rolling up $($perTagFiles.Count) per-tag file(s) into $rollupFile..."
