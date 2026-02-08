@@ -1,0 +1,53 @@
+Name
+All Credential Types
+Client secret / API key
+General password
+General Symmetric key
+Http authorization header
+SQL Server connection string
+User login credentials
+X.509 certificate private key
+Amazon S3 Client Secret Access Key
+ASP.NET machine Key
+Azure App Service deployment password
+Azure Batch shared access key
+Azure Bot Framework secret key
+Azure Bot service app secret
+Azure Cognitive Search API key
+Azure Cognitive Service key
+Azure Container Registry access key
+Azure Cosmos DB account access key
+Azure Databricks personal access token
+Azure DevOps app secret
+Azure DevOps personal access token
+Azure DocumentDB auth key
+Azure EventGrid access key
+Azure Function Master / API key
+Azure IAAS database connection string and Azure SQL connection string
+Azure IoT connection string
+Azure IoT shared access key
+Azure Logic app shared access signature
+Azure Machine Learning web service API key
+Azure Maps subscription key
+Azure publish setting password
+Azure Redis cache connection string
+Azure Redis cache connection string password
+Azure SAS
+Azure service bus connection string
+Azure service bus shared access signature
+Azure Shared Access key / Web Hook token
+Azure SignalR access key
+Azure SQL connection string
+Azure storage account access key
+Azure storage account key
+Azure Storage account key (generic)
+Azure Storage account shared access signature
+Azure Storage account shared access signature for high risk resources
+Azure subscription management certificate
+GitHub Personal Access Token
+Google API key
+Microsoft Bing maps key
+Microsoft Entra client access token
+Microsoft Entra client secret
+Microsoft Entra user Credentials
+Slack access token
