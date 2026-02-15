@@ -1,5 +1,8 @@
 # purview-content-explorer-export
 
+[![Test](https://github.com/LukeEvansTech/purview-content-explorer-export/actions/workflows/test.yml/badge.svg)](https://github.com/LukeEvansTech/purview-content-explorer-export/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 PowerShell tool for exporting **item-level data** from Microsoft Purview Content Explorer — one row per file/email — across all four Microsoft 365 workloads (Exchange, SharePoint, OneDrive, Teams) and across many tags (Sensitive Information Types, Sensitivity labels, Retention labels, Trainable Classifiers).
 
 It wraps the [`Export-ContentExplorerData`](https://learn.microsoft.com/en-us/powershell/module/exchangepowershell/export-contentexplorerdata) cmdlet with the boring-but-essential plumbing: pagination, multi-workload fan-out, per-tag CSV files, a merged roll-up, skip-existing for resumable runs, and a CSV-driven include list so you can sweep only the SITs you actually care about.
