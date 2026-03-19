@@ -2,7 +2,10 @@
 
 [![Test](https://github.com/LukeEvansTech/purview-content-explorer-export/actions/workflows/test.yml/badge.svg)](https://github.com/LukeEvansTech/purview-content-explorer-export/actions/workflows/test.yml)
 [![Lint](https://github.com/LukeEvansTech/purview-content-explorer-export/actions/workflows/lint.yml/badge.svg)](https://github.com/LukeEvansTech/purview-content-explorer-export/actions/workflows/lint.yml)
+[![Docs](https://github.com/LukeEvansTech/purview-content-explorer-export/actions/workflows/docs.yml/badge.svg)](https://lukeevanstech.github.io/purview-content-explorer-export/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+📖 **Full documentation:** <https://lukeevanstech.github.io/purview-content-explorer-export/>
 
 PowerShell tool for exporting **item-level data** from Microsoft Purview Content Explorer — one row per file/email — across all four Microsoft 365 workloads (Exchange, SharePoint, OneDrive, Teams) and across many tags (Sensitive Information Types, Sensitivity labels, Retention labels, Trainable Classifiers).
 

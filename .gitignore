@@ -4,3 +4,4 @@ output/
 .DS_Store
 .claude/
 testResults.xml
+site/

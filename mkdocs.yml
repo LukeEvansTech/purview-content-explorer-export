@@ -1,0 +1,71 @@
+# https://www.mkdocs.org/user-guide/configuration/
+# https://squidfunk.github.io/mkdocs-material/creating-your-site/
+
+site_name: purview-content-explorer-export
+site_url: https://LukeEvansTech.github.io/purview-content-explorer-export/
+repo_url: https://github.com/LukeEvansTech/purview-content-explorer-export/
+repo_name: LukeEvansTech/purview-content-explorer-export
+site_description: PowerShell tool for exporting item-level data from Microsoft Purview Content Explorer across EXO/SPO/ODB/Teams.
+site_author: Luke Evans
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - content.code.annotate
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - search.suggest
+    - search.highlight
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - Quick start: quickstart.md
+  - Usage:
+      - Common scenarios: usage.md
+      - Working with non-canonical names: name-matching.md
+      - Recovery & resumability: recovery.md
+  - Reference:
+      - Output schema: output-schema.md
+      - Invoke-CESweep.ps1: invoke-cesweep.md
+      - Export-CEItems.ps1: export-ceitems.md
+      - match-sits.ps1: match-sits.md
+  - Troubleshooting: troubleshooting.md
+  - Contributing: contributing.md
+  - Changelog: CHANGELOG.md
