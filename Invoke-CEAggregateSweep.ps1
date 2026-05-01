@@ -150,5 +150,26 @@ foreach ($tag in $inventory) {
     }
 }
 
-# --- Roll-up + final summary come in Task 11 ---
+# --- Roll-up: concatenate all per-tag CSVs into aggregate_all.csv ---
+$rollupFile = Join-Path $OutDir 'aggregate_all.csv'
+$perTagFiles = Get-ChildItem -Path $OutDir -Filter 'aggregate_*.csv' |
+    Where-Object { $_.Name -ne 'aggregate_all.csv' }
+
+if ($perTagFiles.Count -gt 0) {
+    Write-Host "rolling up $($perTagFiles.Count) per-tag file(s) into $rollupFile..."
+    $rollupRows = foreach ($f in $perTagFiles) {
+        Import-Csv -Path $f.FullName
+    }
+    if ($rollupRows) {
+        $rollupRows | Export-Csv -Path $rollupFile -Encoding UTF8 -NoTypeInformation
+    } else {
+        # All per-tag files were empty (header-only). Write an empty roll-up.
+        Set-Content -Path $rollupFile -Value '' -Encoding UTF8
+    }
+} else {
+    Write-Host 'no per-tag files found; roll-up not generated.'
+}
+
 Write-Host ('processed={0} succeeded={1} skipped={2} failed={3}' -f $counts.processed, $counts.succeeded, $counts.skipped, $counts.failed)
+
+if ($counts.failed -gt 0) { exit 1 } else { exit 0 }
