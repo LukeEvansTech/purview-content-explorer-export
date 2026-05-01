@@ -17,6 +17,13 @@ param(
     [string[]]$NameLike = @('*'),
     [string[]]$NameNotLike = @(),
 
+    # Path to a CSV file whose 'Name' column (or -NamesColumn) holds the tag names to sweep.
+    # When set, replaces -NameLike entirely. After enumeration, names from this file that
+    # didn't match anything in the tenant are listed as a warning so you can spot typos /
+    # tenant gaps. Names are case-insensitive (PowerShell -like semantics).
+    [string]$NamesFile,
+    [string]$NamesColumn = 'Name',
+
     [ValidateSet('EXO','ODB','SPO','Teams')]
     [string[]]$Workloads = @('EXO','ODB','SPO','Teams'),
 
@@ -37,6 +44,25 @@ Import-Module (Join-Path $PSScriptRoot 'lib/CEHelpers.psm1') -Force
 
 if (-not (Test-Path $OutDir)) {
     New-Item -ItemType Directory -Path $OutDir | Out-Null
+}
+
+# --- Load names from CSV if requested ---
+$namesFromFile = $null
+if ($NamesFile) {
+    if (-not (Test-Path $NamesFile)) {
+        throw "NamesFile not found: $NamesFile"
+    }
+    $namesFromFile = @(
+        Import-Csv -Path $NamesFile |
+            ForEach-Object { $_.$NamesColumn } |
+            Where-Object { $_ -and $_.Trim() -ne '' } |
+            ForEach-Object { $_.Trim() }
+    )
+    if ($namesFromFile.Count -eq 0) {
+        throw "NamesFile '$NamesFile' has no values in column '$NamesColumn' — check the column name."
+    }
+    Write-Host "loaded $($namesFromFile.Count) name(s) from $NamesFile (column '$NamesColumn')"
+    $NameLike = $namesFromFile
 }
 
 # --- Connection check ---
@@ -117,6 +143,26 @@ $inventory = Get-CETagInventory -TagTypes $TagTypes -NameLike $NameLike -NameNot
 Write-Host ("found {0} tag(s) after filtering:" -f $inventory.Count)
 $inventory | Group-Object TagType | ForEach-Object {
     Write-Host ("  {0}: {1}" -f $_.Name, $_.Count)
+}
+
+# --- Report names from -NamesFile that didn't match any tenant tag ---
+if ($namesFromFile) {
+    $matchedNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    foreach ($tag in $inventory) {
+        foreach ($pattern in $namesFromFile) {
+            if ($tag.TagName -like $pattern) {
+                [void]$matchedNames.Add($pattern)
+                break
+            }
+        }
+    }
+    $unmatched = @($namesFromFile | Where-Object { -not $matchedNames.Contains($_) })
+    if ($unmatched.Count -gt 0) {
+        Write-Warning ("{0} of {1} name(s) from '{2}' did not match any tenant tag:" -f $unmatched.Count, $namesFromFile.Count, $NamesFile)
+        foreach ($n in $unmatched) { Write-Host "  unmatched: $n" }
+    } else {
+        Write-Host "all $($namesFromFile.Count) name(s) from NamesFile matched at least one tenant tag."
+    }
 }
 
 if ($DryRun) {

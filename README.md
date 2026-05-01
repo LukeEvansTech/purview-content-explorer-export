@@ -36,6 +36,12 @@ Connect-IPPSSession
 # Sensitivity-label-only sweep.
 ./Invoke-CESweep.ps1 -TagTypes Sensitivity
 
+# Sweep only the SITs whose names appear in a CSV (uses the 'Name' column by default).
+./Invoke-CESweep.ps1 -NamesFile ./my-sit-list.csv
+
+# Same, but the CSV uses a different column name.
+./Invoke-CESweep.ps1 -NamesFile ./list.csv -NamesColumn 'SIT Name'
+
 # Re-run only failed/missing tags (default behaviour — skip-existing is on).
 ./Invoke-CESweep.ps1
 
