@@ -1,8 +1,29 @@
 #!/usr/bin/env pwsh
 #Requires -Version 7.0
+<#
+.SYNOPSIS
+Suggest canonical tenant SIT names for a CSV of SIT names that may use
+non-canonical naming (case differences, "Germany" vs "German", "Luxemburg"
+vs "Luxembourg", etc.).
+
+.DESCRIPTION
+Connects to Security & Compliance PowerShell, dumps the full SIT list,
+then for each name in the input CSV tries:
+  1. Normalized-exact match (case-insensitive, no punctuation)
+  2. Substring containment in either direction
+  3. Levenshtein distance (≤ 30% of name length)
+
+Results are printed and exported to /tmp/sit_mappings.csv with a Suggested
+column you can review and apply manually.
+
+.EXAMPLE
+./match-sits.ps1 -NamesFile ./my-sits.csv
+#>
 param(
-    [string]$NamesFile = '/Users/luke.evans/Scratch/tbsits/SITs.csv',
-    [string]$NamesColumn = 'Name'
+    [Parameter(Mandatory)]
+    [string]$NamesFile,
+    [string]$NamesColumn = 'Name',
+    [string]$OutFile = '/tmp/sit_mappings.csv'
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -99,5 +120,5 @@ foreach ($row in $rows) {
 # Print only the non-exact matches (those needing changes)
 Write-Host "`n=== mappings needing change ==="
 $mappings | Where-Object { $_.Type -ne 'exact' } | Format-Table -AutoSize -Wrap
-$mappings | Where-Object { $_.Type -ne 'exact' } | Export-Csv /tmp/sit_mappings.csv -NoTypeInformation -Encoding UTF8
-Write-Host "exported to /tmp/sit_mappings.csv"
+$mappings | Where-Object { $_.Type -ne 'exact' } | Export-Csv $OutFile -NoTypeInformation -Encoding UTF8
+Write-Host "exported to $OutFile"

@@ -52,14 +52,26 @@ if ($NamesFile) {
     if (-not (Test-Path $NamesFile)) {
         throw "NamesFile not found: $NamesFile"
     }
+    # Don't use Import-Csv directly: it treats lines starting with '#' as comments
+    # (so a CSV with a '#' column header silently loses the header row). Read the
+    # header line explicitly and pass it to ConvertFrom-Csv via -Header.
+    $rawLines = Get-Content -Path $NamesFile
+    if ($rawLines.Count -lt 2) {
+        throw "NamesFile '$NamesFile' has fewer than 2 lines — expected header + at least one row."
+    }
+    $headers = $rawLines[0].Split(',') | ForEach-Object { ($_ -replace '^"|"$', '').Trim() }
+    if ($headers -notcontains $NamesColumn) {
+        throw "NamesFile '$NamesFile' has no '$NamesColumn' column. Columns found: $($headers -join ', ')"
+    }
     $namesFromFile = @(
-        Import-Csv -Path $NamesFile |
+        $rawLines | Select-Object -Skip 1 |
+            ConvertFrom-Csv -Header $headers |
             ForEach-Object { $_.$NamesColumn } |
             Where-Object { $_ -and $_.Trim() -ne '' } |
             ForEach-Object { $_.Trim() }
     )
     if ($namesFromFile.Count -eq 0) {
-        throw "NamesFile '$NamesFile' has no values in column '$NamesColumn' — check the column name."
+        throw "NamesFile '$NamesFile' has no values in column '$NamesColumn'."
     }
     Write-Host "loaded $($namesFromFile.Count) name(s) from $NamesFile (column '$NamesColumn')"
     $NameLike = $namesFromFile
