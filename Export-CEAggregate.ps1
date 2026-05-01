@@ -42,5 +42,60 @@ if ((Test-Path $outFile) -and -not $Force) {
     return
 }
 
-# Pagination + per-workload loop comes in Task 6.
-throw "Not implemented yet — Task 6 wires up the export call."
+$allRecords = New-Object System.Collections.Generic.List[object]
+
+foreach ($workload in $Workloads) {
+    Write-Host "  workload=$workload"
+    try {
+        $pageCookie = $null
+        do {
+            $params = @{
+                TagType   = $TagType
+                TagName   = $TagName
+                Workload  = $workload
+                PageSize  = $PageSize
+                Aggregate = $true
+            }
+            if ($pageCookie) { $params.PageCookie = $pageCookie }
+
+            $response = Export-ContentExplorerData @params
+
+            # Response is an array: index 0 is metadata, indices 1..RecordsReturned are records.
+            $meta = $response[0]
+            $recordsReturned = [int]$meta.RecordsReturned
+            $morePages = [bool]$meta.MorePagesAvailable
+            $pageCookie = if ($morePages) { [string]$meta.PageCookie } else { $null }
+
+            if ($recordsReturned -gt 0) {
+                foreach ($rec in $response[1..$recordsReturned]) {
+                    # Convert PSCustomObject to a hashtable we can extend, then emit a new object
+                    # so TagType/TagName/Workload land in the CSV columns.
+                    $row = [ordered]@{
+                        TagType  = $TagType
+                        TagName  = $TagName
+                        Workload = $workload
+                    }
+                    foreach ($prop in $rec.PSObject.Properties) {
+                        $row[$prop.Name] = $prop.Value
+                    }
+                    $allRecords.Add([pscustomobject]$row)
+                }
+            }
+        } while ($morePages)
+    }
+    catch {
+        Write-Warning "    workload=$workload failed: $($_.Exception.Message)"
+    }
+}
+
+if ($allRecords.Count -gt 0) {
+    $allRecords | Export-Csv -Path $outFile -Encoding UTF8 -NoTypeInformation
+    Write-Host "wrote $($allRecords.Count) row(s) to $outFile"
+} else {
+    # Write a header-only file so skip-existing behaves correctly on re-runs of empty tags.
+    [pscustomobject]@{ TagType = $TagType; TagName = $TagName; Workload = ''; } |
+        Export-Csv -Path $outFile -Encoding UTF8 -NoTypeInformation
+    # Trim the placeholder row, keeping only the header.
+    (Get-Content $outFile -TotalCount 1) | Set-Content $outFile -Encoding UTF8
+    Write-Host "wrote 0 row(s) (empty result) to $outFile"
+}
