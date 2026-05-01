@@ -6,12 +6,8 @@
 [extend]
 useDefault = true
 
-[allowlist]
-description = "Allowlists for synthetic / sample data."
+[[allowlists]]
+description = "Synthetic sample CSV — fake-but-realistic GUIDs that look like Microsoft Purview SensitiveInfoType IDs (which are public identifiers, not secrets) trigger the generic-api-key rule on entropy alone."
 paths = [
-    # Synthetic sample output. Contains fake-but-realistic GUIDs intentionally
-    # chosen to look like Microsoft Purview SensitiveInfoType IDs (which are
-    # high-entropy and trigger the generic-api-key rule), but they are not
-    # secrets — they're the public well-known IDs of the SITs themselves.
-    '''^examples/items_all\.sample\.csv$''',
+    '''examples/items_all\.sample\.csv'''
 ]
