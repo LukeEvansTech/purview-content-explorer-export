@@ -2,10 +2,10 @@
 #Requires -Version 7.0
 <#
 .SYNOPSIS
-Sweeps Content Explorer aggregate data across all (or filtered) tags and workloads.
+Sweeps Content Explorer item-level data across all (or filtered) tags and workloads.
 
 .EXAMPLE
-./Invoke-CEAggregateSweep.ps1 -DryRun
+./Invoke-CESweep.ps1 -DryRun
 #>
 [CmdletBinding()]
 param(
@@ -125,7 +125,7 @@ if ($DryRun) {
 }
 
 $logFile = Join-Path $OutDir 'sweep.log'
-$workerScript = Join-Path $PSScriptRoot 'Export-CEAggregate.ps1'
+$workerScript = Join-Path $PSScriptRoot 'Export-CEItems.ps1'
 
 $counts = @{ processed = 0; succeeded = 0; skipped = 0; failed = 0 }
 
@@ -140,7 +140,7 @@ function Write-SweepLog {
 foreach ($tag in $inventory) {
     $counts.processed++
     $safeName = Get-CESafeName $tag.TagName
-    $expectedFile = Join-Path $OutDir ("aggregate_{0}_{1}.csv" -f $tag.TagType, $safeName)
+    $expectedFile = Join-Path $OutDir ("items_{0}_{1}.csv" -f $tag.TagType, $safeName)
 
     if ((Test-Path $expectedFile) -and -not $Force) {
         Write-SweepLog -Status 'skip' -TagType $tag.TagType -TagName $tag.TagName -Detail 'exists'
@@ -171,10 +171,10 @@ foreach ($tag in $inventory) {
     }
 }
 
-# --- Roll-up: concatenate all per-tag CSVs into aggregate_all.csv ---
-$rollupFile = Join-Path $OutDir 'aggregate_all.csv'
-$perTagFiles = Get-ChildItem -Path $OutDir -Filter 'aggregate_*.csv' |
-    Where-Object { $_.Name -ne 'aggregate_all.csv' }
+# --- Roll-up: concatenate all per-tag CSVs into items_all.csv ---
+$rollupFile = Join-Path $OutDir 'items_all.csv'
+$perTagFiles = Get-ChildItem -Path $OutDir -Filter 'items_*.csv' |
+    Where-Object { $_.Name -ne 'items_all.csv' }
 
 if ($perTagFiles.Count -gt 0) {
     Write-Host "rolling up $($perTagFiles.Count) per-tag file(s) into $rollupFile..."

@@ -2,10 +2,12 @@
 #Requires -Version 7.0
 <#
 .SYNOPSIS
-Exports Microsoft Purview Content Explorer aggregate data for one (TagType, TagName) across one or more workloads.
+Exports Microsoft Purview Content Explorer item-level data for one (TagType, TagName) across one or more workloads.
+
+Returns one row per item — file/email-level detail with paths, names, creators, etc.
 
 .EXAMPLE
-./Export-CEAggregate.ps1 -TagType SensitiveInformationType -TagName 'Credit Card Number'
+./Export-CEItems.ps1 -TagType SensitiveInformationType -TagName 'Credit Card Number'
 #>
 [CmdletBinding()]
 param(
@@ -37,7 +39,7 @@ if (-not (Test-Path $OutDir)) {
 }
 
 $safeName = Get-CESafeName $TagName
-$outFile = Join-Path $OutDir ("aggregate_{0}_{1}.csv" -f $TagType, $safeName)
+$outFile = Join-Path $OutDir ("items_{0}_{1}.csv" -f $TagType, $safeName)
 
 if ((Test-Path $outFile) -and -not $Force) {
     Write-Host "skip (exists): $outFile"
@@ -59,7 +61,6 @@ foreach ($workload in $Workloads) {
                 TagName     = $TagName
                 Workload    = $workload
                 PageSize    = $PageSize
-                Aggregate   = $true
                 ErrorAction = 'Stop'
             }
             if ($pageCookie) { $params.PageCookie = $pageCookie }

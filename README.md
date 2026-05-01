@@ -1,7 +1,8 @@
 # tbcontentexplorer
 
-PowerShell tool for sweeping Microsoft Purview Content Explorer aggregate data
-across all tags and workloads.
+PowerShell tool for exporting Microsoft Purview Content Explorer item-level data
+across all tags and workloads. One row per file/email — file paths, names,
+creators, sizes, etc.
 
 ## Prerequisites
 
@@ -17,41 +18,43 @@ across all tags and workloads.
 Connect-IPPSSession
 
 # 2. Dry-run to see the planned (TagType, TagName) list without exporting.
-./Invoke-CEAggregateSweep.ps1 -DryRun
+./Invoke-CESweep.ps1 -DryRun
 
 # 3. Full SIT sweep — defaults to all SensitiveInformationTypes across all four workloads.
-./Invoke-CEAggregateSweep.ps1
+./Invoke-CESweep.ps1
 ```
 
 ## Common scenarios
 
 ```powershell
 # Default is SensitiveInformationType only. Add more tag types explicitly:
-./Invoke-CEAggregateSweep.ps1 -TagTypes SensitiveInformationType,Sensitivity,Retention
+./Invoke-CESweep.ps1 -TagTypes SensitiveInformationType,Sensitivity,Retention
 
 # Narrow to one tag-name pattern.
-./Invoke-CEAggregateSweep.ps1 -NameLike 'Credit*'
+./Invoke-CESweep.ps1 -NameLike 'Credit*'
 
 # Sensitivity-label-only sweep.
-./Invoke-CEAggregateSweep.ps1 -TagTypes Sensitivity
+./Invoke-CESweep.ps1 -TagTypes Sensitivity
 
 # Re-run only failed/missing tags (default behaviour — skip-existing is on).
-./Invoke-CEAggregateSweep.ps1
+./Invoke-CESweep.ps1
 
 # Force a complete re-export, overwriting existing CSVs.
-./Invoke-CEAggregateSweep.ps1 -Force
+./Invoke-CESweep.ps1 -Force
 
 # Run the worker by hand for a single tag.
-./Export-CEAggregate.ps1 -TagType SensitiveInformationType -TagName 'Credit Card Number'
+./Export-CEItems.ps1 -TagType SensitiveInformationType -TagName 'Credit Card Number'
 ```
 
 ## Output
 
-- `output/aggregate_<TagType>_<safe-name>.csv` — one per `(TagType, TagName)`.
-  Columns include `TagType`, `TagName`, `Workload`, plus the folder/site/UPN
-  identifier and item count returned by `Export-ContentExplorerData -Aggregate`.
-- `output/aggregate_all.csv` — concatenation of all per-tag files; the file you
-  load into Excel / Power BI for analysis.
+- `output/items_<TagType>_<safe-name>.csv` — one per `(TagType, TagName)`.
+  Columns include `TagType`, `TagName`, `Workload`, plus the file/email-level
+  fields returned by `Export-ContentExplorerData` (file URL, name, sender,
+  recipients, creator, modifier, size, etc. — schema varies by workload).
+- `output/items_all.csv` — concatenation of all per-tag files (column-unioned
+  so the SPO/ODB and EXO/Teams schemas coexist); the file you load into
+  Excel / Power BI for analysis.
 - `output/sweep.log` — append-only per-tag status log.
 
 ## Recovery
@@ -59,7 +62,7 @@ Connect-IPPSSession
 If a run is interrupted (Ctrl+C, session-token expiry, network blip), just re-run:
 
 ```powershell
-./Invoke-CEAggregateSweep.ps1
+./Invoke-CESweep.ps1
 ```
 
 Tags whose per-tag CSV already exists are skipped, so the sweep picks up where
@@ -77,4 +80,4 @@ the manual smoke checklist in the spec.
 
 ## Spec
 
-`docs/superpowers/specs/2026-04-30-content-explorer-aggregate-sweep-design.md`
+`docs/superpowers/specs/2026-04-30-content-explorer-aggregate-sweep-design.md` (original aggregate-mode design — superseded; see git history for the pivot to detail-mode).
