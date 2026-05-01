@@ -223,7 +223,7 @@ Concatenation of every `items_*.csv` (excluding itself). Because per-tag files c
 
 Append-only, timestamped, one line per worker invocation:
 
-```
+```text
 2026-04-30T14:32:01Z  ok      SensitiveInformationType   "Credit Card Number"          rows=42
 2026-04-30T14:32:08Z  skip    SensitiveInformationType   "U.S. Social Security Number" exists
 2026-04-30T14:32:09Z  fail    SensitiveInformationType   "Azure Storage Account Key"   <error message>
@@ -237,7 +237,9 @@ Append-only, timestamped, one line per worker invocation:
 
 **`Connect-IPPSSession` opens a browser window that the user can't see** — the popup sometimes hides behind other windows or doesn't focus. If after 60s nothing has happened, kill the pwsh process and try again. As an alternative, you can use device-code auth: `Connect-IPPSSession -UseDeviceAuthentication` (prints a code to paste into [microsoft.com/devicelogin](https://microsoft.com/devicelogin)).
 
-**`Cannot index into a null array` from the worker** — happens when `Export-ContentExplorerData` emits `Write-Error` without throwing terminating, leaving `$response` null. The current code defensively checks for null and surfaces a clearer message ("server-side error the cmdlet did not throw"). The most common cause is a TagName that doesn't actually exist in the tenant for the requested workload — check enumeration coverage with `-DryRun`.
+**`Cannot index into a null array` from the worker** — happens when `Export-ContentExplorerData` emits `Write-Error` without throwing terminating, leaving `$response` null. The current code defensively checks for null and surfaces a clearer message ("server-side error the cmdlet did not throw").
+
+The most common cause is a TagName that doesn't actually exist in the tenant for the requested workload — check enumeration coverage with `-DryRun`.
 
 **`The property 'Count' cannot be found on this object`** — fixed. Caused by `Set-StrictMode -Version Latest` rejecting member-access enumeration on a scalar `FileInfo`. The roll-up now wraps `Get-ChildItem` in `@(...)`.
 
@@ -266,7 +268,7 @@ Only pure-logic helpers (`Get-CESafeName`, `Test-CETagNameFilter`, `Get-CETagTyp
 
 ## Architecture (for contributors)
 
-```
+```text
 purview-content-explorer-export/
   Export-CEItems.ps1          # worker — one (TagType, TagName), N workloads
   Invoke-CESweep.ps1          # orchestrator — enumerate, filter, dispatch, roll-up

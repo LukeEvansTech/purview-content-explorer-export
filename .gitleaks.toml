@@ -1,0 +1,17 @@
+# gitleaks config — extends the default ruleset, adds allowlists for
+# files that are synthetic by design.
+#
+# See https://github.com/gitleaks/gitleaks#configuration
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlists for synthetic / sample data."
+paths = [
+    # Synthetic sample output. Contains fake-but-realistic GUIDs intentionally
+    # chosen to look like Microsoft Purview SensitiveInfoType IDs (which are
+    # high-entropy and trigger the generic-api-key rule), but they are not
+    # secrets — they're the public well-known IDs of the SITs themselves.
+    '''^examples/items_all\.sample\.csv$''',
+]
