@@ -47,3 +47,29 @@ Describe 'Test-CETagNameFilter' {
         Test-CETagNameFilter -Name 'anything' -NameLike @() -NameNotLike @() | Should -BeTrue
     }
 }
+
+Describe 'Get-CETagTypeEnumeration' {
+    It 'returns SensitiveInformationType mapping' {
+        $m = Get-CETagTypeEnumeration -TagType SensitiveInformationType
+        $m.Cmdlet | Should -Be 'Get-DlpSensitiveInformationType'
+        $m.NameProperty | Should -Be 'Name'
+    }
+    It 'returns Sensitivity mapping' {
+        $m = Get-CETagTypeEnumeration -TagType Sensitivity
+        $m.Cmdlet | Should -Be 'Get-Label'
+        $m.NameProperty | Should -Be 'DisplayName'
+    }
+    It 'returns Retention mapping' {
+        $m = Get-CETagTypeEnumeration -TagType Retention
+        $m.Cmdlet | Should -Be 'Get-ComplianceTag'
+        $m.NameProperty | Should -Be 'Name'
+    }
+    It 'returns TrainableClassifier mapping' {
+        $m = Get-CETagTypeEnumeration -TagType TrainableClassifier
+        $m.Cmdlet | Should -Be 'Get-DlpTrainableClassifier'
+        $m.NameProperty | Should -Be 'Name'
+    }
+    It 'throws on unknown TagType' {
+        { Get-CETagTypeEnumeration -TagType 'Bogus' } | Should -Throw
+    }
+}

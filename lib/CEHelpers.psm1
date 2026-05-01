@@ -24,4 +24,19 @@ function Test-CETagNameFilter {
     return -not $excluded
 }
 
-Export-ModuleMember -Function Get-CESafeName, Test-CETagNameFilter
+function Get-CETagTypeEnumeration {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateSet('Retention','SensitiveInformationType','Sensitivity','TrainableClassifier')]
+        [string]$TagType
+    )
+    switch ($TagType) {
+        'SensitiveInformationType' { @{ Cmdlet = 'Get-DlpSensitiveInformationType'; NameProperty = 'Name' } }
+        'Sensitivity'              { @{ Cmdlet = 'Get-Label';                       NameProperty = 'DisplayName' } }
+        'Retention'                { @{ Cmdlet = 'Get-ComplianceTag';               NameProperty = 'Name' } }
+        'TrainableClassifier'      { @{ Cmdlet = 'Get-DlpTrainableClassifier';      NameProperty = 'Name' } }
+    }
+}
+
+Export-ModuleMember -Function Get-CESafeName, Test-CETagNameFilter, Get-CETagTypeEnumeration
