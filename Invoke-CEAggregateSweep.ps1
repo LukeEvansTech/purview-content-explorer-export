@@ -77,6 +77,10 @@ function Get-CETagInventory {
         [string[]]$NameNotLike
     )
     $inventory = New-Object System.Collections.Generic.List[object]
+    # Some Get-* cmdlets (notably Get-Label) return multiple objects with the same DisplayName
+    # — e.g. published vs scoped variants. Track (TagType, Name) pairs so we don't dispatch
+    # the worker twice and overwrite the same per-tag CSV.
+    $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
     foreach ($tt in $TagTypes) {
         $map = Get-CETagTypeEnumeration -TagType $tt
@@ -100,6 +104,7 @@ function Get-CETagInventory {
             $name = $item.$nameProp
             if (-not $name) { continue }
             if (-not (Test-CETagNameFilter -Name $name -NameLike $NameLike -NameNotLike $NameNotLike)) { continue }
+            if (-not $seen.Add("${tt}|${name}")) { continue }
             $inventory.Add([pscustomobject]@{ TagType = $tt; TagName = $name })
         }
     }

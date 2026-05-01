@@ -45,22 +45,33 @@ if ((Test-Path $outFile) -and -not $Force) {
 }
 
 $allRecords = New-Object System.Collections.Generic.List[object]
+$workloadsAttempted = 0
+$workloadsErrored = 0
 
 foreach ($workload in $Workloads) {
+    $workloadsAttempted++
     Write-Host "  workload=$workload"
     try {
         $pageCookie = $null
         do {
             $params = @{
-                TagType   = $TagType
-                TagName   = $TagName
-                Workload  = $workload
-                PageSize  = $PageSize
-                Aggregate = $true
+                TagType     = $TagType
+                TagName     = $TagName
+                Workload    = $workload
+                PageSize    = $PageSize
+                Aggregate   = $true
+                ErrorAction = 'Stop'
             }
             if ($pageCookie) { $params.PageCookie = $pageCookie }
 
             $response = Export-ContentExplorerData @params
+
+            # Defensive: if the cmdlet emits Write-Error but doesn't terminate (we've seen
+            # this with "A server side error has occurred"), $response may be $null. Surface
+            # a clearer message than "Cannot index into a null array" via the catch below.
+            if ($null -eq $response -or @($response).Count -eq 0) {
+                throw 'Export-ContentExplorerData returned no response (likely a server-side error the cmdlet did not throw).'
+            }
 
             # Response is an array: index 0 is metadata, indices 1..RecordsReturned are records.
             $meta = $response[0]
@@ -86,18 +97,27 @@ foreach ($workload in $Workloads) {
         } while ($morePages)
     }
     catch {
+        $workloadsErrored++
         Write-Warning "    workload=$workload failed: $($_.Exception.Message)"
     }
 }
 
+# If every attempted workload errored, surface this as a failure so the orchestrator marks
+# the tag as failed rather than reporting a misleading "succeeded with 0 rows".
+if ($workloadsAttempted -gt 0 -and $workloadsErrored -eq $workloadsAttempted) {
+    throw "all $workloadsAttempted workload(s) errored — see warnings above"
+}
+
+$partialNote = if ($workloadsErrored -gt 0) { " ($workloadsErrored of $workloadsAttempted workload(s) errored)" } else { '' }
+
 if ($allRecords.Count -gt 0) {
     $allRecords | Export-Csv -Path $outFile -Encoding UTF8 -NoTypeInformation
-    Write-Host "wrote $($allRecords.Count) row(s) to $outFile"
+    Write-Host "wrote $($allRecords.Count) row(s)$partialNote to $outFile"
 } else {
     # Write a header-only file so skip-existing behaves correctly on re-runs of empty tags.
     [pscustomobject]@{ TagType = $TagType; TagName = $TagName; Workload = ''; } |
         Export-Csv -Path $outFile -Encoding UTF8 -NoTypeInformation
     # Trim the placeholder row, keeping only the header.
     (Get-Content $outFile -TotalCount 1) | Set-Content $outFile -Encoding UTF8
-    Write-Host "wrote 0 row(s) (empty result) to $outFile"
+    Write-Host "wrote 0 row(s) (empty result)$partialNote to $outFile"
 }
