@@ -1,0 +1,70 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pester:
+    name: Pester (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure Pester 5+ is installed
+        shell: pwsh
+        run: |
+          $existing = Get-Module Pester -ListAvailable | Where-Object { $_.Version.Major -ge 5 } | Select-Object -First 1
+          if ($existing) {
+            Write-Host "Found Pester $($existing.Version)"
+          } else {
+            Write-Host "Installing Pester..."
+            Install-Module Pester -Scope CurrentUser -Force -SkipPublisherCheck
+          }
+
+      - name: Run Pester tests
+        shell: pwsh
+        run: Invoke-Pester ./tests/CEHelpers.Tests.ps1 -CI
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pester-results-${{ matrix.os }}
+          path: testResults.xml
+          if-no-files-found: ignore
+
+  parse:
+    name: Parse-check scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify scripts parse
+        shell: pwsh
+        run: |
+          $files = @(
+            './Invoke-CESweep.ps1',
+            './Export-CEItems.ps1',
+            './scripts/match-sits.ps1',
+            './lib/CEHelpers.psm1'
+          )
+          $errors = @()
+          foreach ($f in $files) {
+            $parseErrors = $null
+            $null = [System.Management.Automation.Language.Parser]::ParseFile($f, [ref]$null, [ref]$parseErrors)
+            if ($parseErrors) {
+              $errors += [pscustomobject]@{ File = $f; Errors = $parseErrors }
+              Write-Host "::error file=$f::Parse errors:"
+              foreach ($e in $parseErrors) { Write-Host "  $e" }
+            } else {
+              Write-Host "✓ $f"
+            }
+          }
+          if ($errors) { exit 1 }
