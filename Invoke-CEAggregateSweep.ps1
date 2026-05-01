@@ -1,3 +1,4 @@
+#!/usr/bin/env pwsh
 #Requires -Version 7.0
 <#
 .SYNOPSIS
@@ -38,9 +39,21 @@ if (-not (Test-Path $OutDir)) {
 
 # --- Connection check ---
 function Test-CEConnected {
+    # Get-ConnectionInformation is the documented health-check (no API call required).
+    # If it's missing or returns no active S&C connection, fall back to a cheap real
+    # cmdlet call. Get-Label has no -ResultSize parameter (that's an Exchange-cmdlet
+    # convention; S&C label cmdlets don't accept it), so just call it and pipe to
+    # Select-Object -First 1.
     try {
-        # Get-Label is a cheap S&C cmdlet that fails fast when not connected.
-        Get-Label -ResultSize 1 -ErrorAction Stop | Out-Null
+        $info = Get-ConnectionInformation -ErrorAction Stop
+        if ($info | Where-Object { $_.State -eq 'Connected' -and $_.ConnectionUri -match 'compliance|protection' }) {
+            return $true
+        }
+    } catch {
+        # Get-ConnectionInformation not available — fall through to the live probe.
+    }
+    try {
+        Get-Label -ErrorAction Stop | Select-Object -First 1 | Out-Null
         return $true
     } catch {
         return $false
