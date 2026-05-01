@@ -1,3 +1,4 @@
+#Requires -Version 7.0
 <#
 .SYNOPSIS
 Exports Microsoft Purview Content Explorer aggregate data for one (TagType, TagName) across one or more workloads.

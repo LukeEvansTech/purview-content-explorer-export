@@ -1,3 +1,4 @@
+#Requires -Version 7.0
 <#
 .SYNOPSIS
 Sweeps Content Explorer aggregate data across all (or filtered) tags and workloads.
@@ -161,7 +162,17 @@ if ($perTagFiles.Count -gt 0) {
         Import-Csv -Path $f.FullName
     }
     if ($rollupRows) {
-        $rollupRows | Export-Csv -Path $rollupFile -Encoding UTF8 -NoTypeInformation
+        # Column union: collect every property name across all rows before re-emitting.
+        # Without this, Import-Csv | Export-Csv adopts the first object's schema and silently
+        # drops columns that exist on later objects — e.g. SPO's SiteUrl when EXO files
+        # (which have UserPrincipalName instead) sort first.
+        $allColumns = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+        foreach ($row in $rollupRows) {
+            foreach ($prop in $row.PSObject.Properties) { [void]$allColumns.Add($prop.Name) }
+        }
+        $rollupRows |
+            Select-Object -Property ([string[]]$allColumns) |
+            Export-Csv -Path $rollupFile -Encoding UTF8 -NoTypeInformation
     } else {
         # All per-tag files were empty (header-only). Write an empty roll-up.
         Set-Content -Path $rollupFile -Value '' -Encoding UTF8

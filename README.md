@@ -5,7 +5,7 @@ across all tags and workloads.
 
 ## Prerequisites
 
-- PowerShell 7+ (5.1 should also work).
+- PowerShell 7+ (scripts declare `#Requires -Version 7.0` — they rely on member-access enumeration on pipelines, which doesn't work in PS 5.1).
 - ExchangeOnlineManagement module: `Install-Module ExchangeOnlineManagement -Scope CurrentUser`
 - Pester 5+ (only for offline unit tests): `Install-Module Pester -Scope CurrentUser -SkipPublisherCheck`
 - Account with the **Content Explorer List Viewer** role group in Microsoft Purview.
