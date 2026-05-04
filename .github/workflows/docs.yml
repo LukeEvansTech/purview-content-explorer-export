@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   # needed to push to gh-pages
+  contents: write # needed to push to gh-pages
 
 jobs:
   deploy-docs:
@@ -16,7 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          fetch-depth: 0   # mkdocs-material git-revision plugins (if added later) want history
+          fetch-depth: 0 # mkdocs-material git-revision plugins (if added later) want history
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
