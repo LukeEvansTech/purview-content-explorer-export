@@ -1,5 +1,3 @@
-# Build dependencies for the docs site (used by GitHub Pages and Read the Docs).
-jinja2>=3.1.6
-mkdocs>=1.6.0
-mkdocs-material==9.6.12
-pygments>=2.18.0
+# Zensical documentation requirements
+# https://zensical.org/
+zensical>=0.0.4

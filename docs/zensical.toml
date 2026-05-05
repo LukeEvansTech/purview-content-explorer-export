@@ -1,0 +1,90 @@
+# Zensical Configuration
+# https://zensical.org/docs/
+
+[project]
+site_name = "purview-content-explorer-export"
+site_description = "PowerShell tool for exporting item-level data from Microsoft Purview Content Explorer across EXO/SPO/ODB/Teams"
+site_author = "Luke Evans"
+site_url = "https://LukeEvansTech.github.io/purview-content-explorer-export/"
+copyright = "Copyright © 2026 Luke Evans"
+
+docs_dir = "docs"
+site_dir = "site"
+use_directory_urls = true
+dev_addr = "localhost:8000"
+
+[project.theme]
+name = "material"
+variant = "modern"
+language = "en"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+primary = "blue"
+accent = "light-blue"
+toggle_icon = "material/brightness-7"
+toggle_name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+primary = "blue"
+accent = "light-blue"
+toggle_icon = "material/brightness-4"
+toggle_name = "Switch to light mode"
+
+[project.theme.icon]
+repo = "fontawesome/brands/github"
+
+# Repository Integration
+repo_url = "https://github.com/LukeEvansTech/purview-content-explorer-export/"
+repo_name = "LukeEvansTech/purview-content-explorer-export"
+edit_uri = "edit/main/docs/docs"
+
+# Navigation Structure
+[[nav]]
+Home = "index.md"
+
+[[nav]]
+"Quick start" = "quickstart.md"
+
+[[nav]]
+Usage = [
+  { "Common scenarios" = "usage.md" },
+  { "Working with non-canonical names" = "name-matching.md" },
+  { "Recovery & resumability" = "recovery.md" },
+]
+
+[[nav]]
+Reference = [
+  { "Output schema" = "output-schema.md" },
+  { "Invoke-CESweep.ps1" = "invoke-cesweep.md" },
+  { "Export-CEItems.ps1" = "export-ceitems.md" },
+  { "match-sits.ps1" = "match-sits.md" },
+]
+
+[[nav]]
+Troubleshooting = "troubleshooting.md"
+
+[[nav]]
+Contributing = "contributing.md"
+
+[[nav]]
+Changelog = "CHANGELOG.md"
+
+# Markdown Extensions
+[markdown_extensions]
+admonition = {}
+attr_list = {}
+md_in_html = {}
+tables = {}
+toc = { permalink = true }
+
+[markdown_extensions.pymdownx]
+highlight = { anchor_linenums = true, line_spans = "__span", pygments_lang_class = true }
+inlinehilite = {}
+snippets = {}
+superfences = {}
+details = {}
+tabbed = { alternate_style = true }
