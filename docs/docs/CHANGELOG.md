@@ -14,3 +14,5 @@ Pre-release working state. Tag `v1.0.0` once the design has stabilised in real-t
 - Pester unit tests for the pure-logic helpers (18 tests, run on Ubuntu / macOS / Windows in CI)
 - GitHub Actions workflows for tests, super-linter, and docs deploy
 - MkDocs Material documentation site
+
+[Unreleased]: https://github.com/LukeEvansTech/purview-content-explorer-export/commits/main/
