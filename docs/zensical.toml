@@ -5,7 +5,7 @@
 site_name = "purview-content-explorer-export"
 site_description = "PowerShell tool for exporting item-level data from Microsoft Purview Content Explorer across EXO/SPO/ODB/Teams"
 site_author = "Luke Evans"
-site_url = "https://LukeEvansTech.github.io/purview-content-explorer-export/"
+site_url = "https://lukeevanstech.github.io/purview-content-explorer-export/"
 copyright = "Copyright © 2026 Luke Evans"
 
 docs_dir = "docs"
