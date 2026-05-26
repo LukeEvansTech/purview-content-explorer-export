@@ -3,7 +3,7 @@
 site_name = "purview-content-explorer-helpers"
 site_description = "Higher-level helpers for purview-content-explorer-export outputs"
 site_author = "Luke Evans"
-site_url = "https://LukeEvansTech.github.io/purview-content-explorer-helpers/"
+site_url = "https://lukeevanstech.github.io/purview-content-explorer-helpers/"
 copyright = "Copyright © 2026 Luke Evans"
 
 docs_dir = "docs"
