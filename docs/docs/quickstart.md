@@ -32,7 +32,7 @@ Verify Pester tests still pass:
 
 ```bash
 pwsh -NoProfile -Command "Invoke-Pester ./tests/CEHelpers.Tests.ps1 -CI"
-# Expected: Tests Passed: 18
+# Expected: Tests Passed: 29
 ```
 
 ## Run

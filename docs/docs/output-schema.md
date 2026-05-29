@@ -14,7 +14,7 @@ One per `(TagType, TagName)` combination that had at least one hit. Filename use
 | `Location` | from cmdlet | Same as `Workload` (Microsoft includes both) |
 | `FileSourceUrl` | from cmdlet | Site/mailbox URL — for SPO/ODB this is the site root, for EXO/Teams it's the user's UPN |
 | `FileUrl` | from cmdlet | Full path to the file (SPO/ODB only). Empty for EXO/Teams |
-| `FileName` | from cmdlet | File name (SPO/ODB), email subject (EXO), or "Posted in #channel" (Teams) |
+| `FileName` | from cmdlet | Filename (SPO/ODB), email subject (EXO), or "Posted in #channel" (Teams) |
 | `SensitiveInfoTypes` | from cmdlet | Comma-separated GUIDs of all SITs detected in this item |
 | `SensitivityLabel` | from cmdlet | GUID of the sensitivity label applied (if any) |
 | `RetentionLabel` | from cmdlet | Retention label name (if any) |
@@ -23,6 +23,8 @@ One per `(TagType, TagName)` combination that had at least one hit. Filename use
 | `UserModified` | from cmdlet | Display name of the last modifier |
 | `LastModifiedTime` | from cmdlet | UTC timestamp |
 | `SensitiveInfoTypesData` | from cmdlet | JSON array — see below |
+| `TargetConfidence` | added by worker | Confidence of the swept SIT in this item — see [Confidence columns](#confidence-columns) |
+| `ItemMaxConfidence` | added by worker | Strongest confidence of any SIT in this item — see [Confidence columns](#confidence-columns) |
 
 ### `SensitiveInfoTypesData` JSON
 
@@ -40,6 +42,17 @@ For each detected SIT, this column contains a confidence-level breakdown:
 ```
 
 The `Id` matches one of the GUIDs in the `SensitiveInfoTypes` column. Numbers are match counts at each confidence level — useful for ranking or filtering ("show me only files with at least one high-confidence Credit Card match").
+
+### Confidence columns
+
+The worker distils the JSON above into two sortable columns so you can filter and rank in Excel/Power BI without parsing JSON. Both use the labels `3-High`, `2-Medium`, `1-Low`, `0-None` — the numeric prefix means a plain ascending/descending sort orders by strength.
+
+| Column | Meaning |
+|---|---|
+| `TargetConfidence` | The confidence of **the SIT you swept for** in this item (matched by GUID). `N/A` for non-SIT sweeps and for **bundle** SITs such as "All Credential Types" — the bundle's own GUID isn't in the item data, only its constituents. |
+| `ItemMaxConfidence` | The strongest confidence of **any** SIT detected in the item. Always populated; this is the reliable signal for bundle sweeps. |
+
+To surface the most confident hits: filter `TargetConfidence` (or `ItemMaxConfidence` for bundles) to `3-High`, or sort that column descending.
 
 ## Roll-up — `items_all.csv`
 
@@ -65,4 +78,4 @@ Status values:
 
 ## Sample output
 
-The repo includes a 15-row synthetic sample at [`examples/items_all.sample.csv`](https://github.com/LukeEvansTech/purview-content-explorer-export/blob/main/examples/items_all.sample.csv) covering all four workloads, multiple SITs, and the various row shapes you'll see (full file URL for SPO/ODB, empty `FileUrl` + email subject for EXO, channel reference for Teams).
+The repository includes a 15-row synthetic sample at [`examples/items_all.sample.csv`](https://github.com/LukeEvansTech/purview-content-explorer-export/blob/main/examples/items_all.sample.csv) covering all four workloads, multiple SITs, and the various row shapes you'll see (full file URL for SPO/ODB, empty `FileUrl` + email subject for EXO, channel reference for Teams).

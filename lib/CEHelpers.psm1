@@ -42,4 +42,62 @@ function Get-CETagTypeEnumeration {
     }
 }
 
-Export-ModuleMember -Function Get-CESafeName, Test-CETagNameFilter, Get-CETagTypeEnumeration
+function Get-CEConfidenceSummary {
+    # Summarise the per-SIT confidence counts in a Content Explorer item's
+    # SensitiveInfoTypesData JSON into two sortable labels:
+    #   ItemMaxConfidence - strongest confidence of ANY SIT in the item.
+    #   TargetConfidence  - confidence of the swept SIT (matched by GUID), or
+    #                       'N/A' when no GUID is given or it's not in the item
+    #                       (e.g. bundle SITs, whose own GUID is absent).
+    # Labels are '3-High' / '2-Medium' / '1-Low' / '0-None' so a plain sort
+    # orders by strength. Tolerant of empty/malformed input (returns defaults).
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, Position=0)]
+        [AllowEmptyString()]
+        [AllowNull()]
+        [string]$Data,
+
+        [string]$TargetGuid
+    )
+
+    # Highest non-zero bucket for one entry -> ordered label.
+    function ConvertTo-CELevel($entry) {
+        if ([int]$entry.HighConfidenceMatch   -gt 0) { return '3-High' }
+        if ([int]$entry.MediumConfidenceMatch -gt 0) { return '2-Medium' }
+        if ([int]$entry.LowConfidenceMatch    -gt 0) { return '1-Low' }
+        return '0-None'
+    }
+
+    $itemMax = '0-None'
+    $target  = 'N/A'
+
+    $entries = @()
+    if (-not [string]::IsNullOrWhiteSpace($Data)) {
+        try {
+            # Drop nulls so member access stays safe under Set-StrictMode -Latest.
+            $entries = @($Data | ConvertFrom-Json | Where-Object { $null -ne $_ })
+        } catch {
+            $entries = @()  # malformed JSON: keep defaults rather than break the export
+        }
+    }
+
+    $maxRank = 0
+    foreach ($e in $entries) {
+        $lvl  = ConvertTo-CELevel $e
+        $rank = [int]$lvl.Substring(0, 1)
+        if ($rank -gt $maxRank) { $maxRank = $rank; $itemMax = $lvl }
+
+        # -eq on strings is case-insensitive in PowerShell.
+        if ($TargetGuid -and $e.Id -and ([string]$e.Id -eq $TargetGuid)) {
+            $target = $lvl
+        }
+    }
+
+    return [pscustomobject]@{
+        ItemMaxConfidence = $itemMax
+        TargetConfidence  = $target
+    }
+}
+
+Export-ModuleMember -Function Get-CESafeName, Test-CETagNameFilter, Get-CETagTypeEnumeration, Get-CEConfidenceSummary
