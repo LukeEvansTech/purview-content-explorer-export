@@ -19,23 +19,23 @@ It wraps the [`Export-ContentExplorerData`](https://learn.microsoft.com/en-us/po
 
 For every `(TagType, TagName)` combination that has hits in your tenant, you get a CSV with one row per matching item. Columns include:
 
-| Column | What it is |
-|---|---|
-| `TagType` | `SensitiveInformationType`, `Sensitivity`, `Retention`, or `TrainableClassifier` |
-| `TagName` | The label/SIT/classifier name (e.g. `Credit Card Number`) |
-| `Workload` | `EXO`, `ODB`, `SPO`, or `Teams` |
-| `Location` | Same as workload (Microsoft includes both) |
-| `FileSourceUrl` | Site / mailbox URL |
-| `FileUrl` | Full path to the file (SPO/ODB) — empty for EXO/Teams |
-| `FileName` | File name (SPO/ODB), email subject (EXO), or "Posted in #channel" (Teams) |
-| `SensitiveInfoTypes` | Comma-separated GUIDs of all SITs detected in this item |
-| `SensitivityLabel` | GUID of the sensitivity label applied (if any) |
-| `RetentionLabel` | Retention label name (if any) |
-| `TrainableClassifiers` | Comma-separated GUIDs of trainable classifiers that fired |
-| `UserCreated` | Display name of creator |
-| `UserModified` | Display name of last modifier |
-| `LastModifiedTime` | UTC timestamp |
-| `SensitiveInfoTypesData` | JSON array with confidence-level match counts per SIT |
+| Column                   | What it is                                                                       |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| `TagType`                | `SensitiveInformationType`, `Sensitivity`, `Retention`, or `TrainableClassifier` |
+| `TagName`                | The label/SIT/classifier name (e.g. `Credit Card Number`)                        |
+| `Workload`               | `EXO`, `ODB`, `SPO`, or `Teams`                                                  |
+| `Location`               | Same as workload (Microsoft includes both)                                       |
+| `FileSourceUrl`          | Site / mailbox URL                                                               |
+| `FileUrl`                | Full path to the file (SPO/ODB) — empty for EXO/Teams                            |
+| `FileName`               | Filename (SPO/ODB), email subject (EXO), or "Posted in #channel" (Teams)         |
+| `SensitiveInfoTypes`     | Comma-separated GUIDs of all SITs detected in this item                          |
+| `SensitivityLabel`       | GUID of the sensitivity label applied (if any)                                   |
+| `RetentionLabel`         | Retention label name (if any)                                                    |
+| `TrainableClassifiers`   | Comma-separated GUIDs of trainable classifiers that fired                        |
+| `UserCreated`            | Display name of creator                                                          |
+| `UserModified`           | Display name of last modifier                                                    |
+| `LastModifiedTime`       | UTC timestamp                                                                    |
+| `SensitiveInfoTypesData` | JSON array with confidence-level match counts per SIT                            |
 
 A 15-row example is in [`examples/items_all.sample.csv`](examples/items_all.sample.csv) — fake but representative.
 
@@ -43,8 +43,8 @@ A 15-row example is in [`examples/items_all.sample.csv`](examples/items_all.samp
 
 ## Prerequisites
 
-- **PowerShell 7+.** The scripts declare `#Requires -Version 7.0` because they rely on member-access enumeration on pipelines, which doesn't work in PS 5.1. macOS, Windows, and Linux all work.
-- **`ExchangeOnlineManagement` module** (provides `Connect-IPPSSession` and `Export-ContentExplorerData`):
+- **PowerShell 5.1+ or PowerShell 7+.** The scripts declare `#Requires -Version 5.1`, so they run on stock Windows PowerShell 5.1 as well as PowerShell 7 (macOS, Windows, Linux). On 5.1, CSV output is written as UTF-8 _with_ a BOM (PowerShell 7 omits it) — Excel, Power BI, and `Import-Csv` all read either form.
+- **`ExchangeOnlineManagement` module** (provides `Connect-IPPSSession` and `Export-ContentExplorerData`). Use **v3 or later** — on Windows PowerShell 5.1 the connection probe prefers `Get-ConnectionInformation`, which v3+ supplies (it falls back to `Get-Label` on older modules):
   ```powershell
   Install-Module ExchangeOnlineManagement -Scope CurrentUser
   ```
@@ -58,14 +58,14 @@ A 15-row example is in [`examples/items_all.sample.csv`](examples/items_all.samp
 
 ## Install
 
-Clone the repo and you're done — the scripts run in place:
+Clone the repository and you're done — the scripts run in place:
 
 ```bash
 git clone https://github.com/<you>/purview-content-explorer-export.git
 cd purview-content-explorer-export
 ```
 
-Mark the scripts executable if your shell needs it (already done in repo):
+Mark the scripts executable if your shell needs it (already done in the repository):
 
 ```bash
 chmod +x ./Invoke-CESweep.ps1 ./Export-CEItems.ps1
@@ -94,6 +94,7 @@ Connect-IPPSSession
 ```
 
 Output lands in `./output/`:
+
 - `items_<TagType>_<safe-name>.csv` — one per `(TagType, TagName)` that had at least one hit
 - `items_all.csv` — concatenation of all per-tag files, schemas unioned (the file you load into Excel / Power BI)
 - `sweep.log` — append-only timestamped status log
@@ -173,7 +174,7 @@ After enumeration, names from your file that didn't match anything in the tenant
 
 ## Recovery (the `Connect-IPPSSession` token expires after ~1h)
 
-A typical 50-SIT credential sweep takes ~1–1.5 hours; a wider sweep can run for many hours. The session token from `Connect-IPPSSession` lives ~60 minutes, so longer runs *will* hit token expiry mid-sweep.
+A typical 50-SIT credential sweep takes ~1–1.5 hours; a wider sweep can run for many hours. The session token from `Connect-IPPSSession` lives ~60 minutes, so longer runs _will_ hit token expiry mid-sweep.
 
 **Recovery is automatic-ish:**
 
@@ -183,7 +184,7 @@ A typical 50-SIT credential sweep takes ~1–1.5 hours; a wider sweep can run fo
    Connect-IPPSSession      # re-auth
    ./Invoke-CESweep.ps1 -NamesFile ./my-sits.csv   # resume
    ```
-3. Use `-Force` only if you actually want to re-export tags that already have a CSV.
+3. Use `-Force` only if you actually want to export tags again that already have a CSV.
 
 The orchestrator exits with code 1 if any tag failed in the run, 0 otherwise. CI-style automation can re-run on non-zero exit.
 
@@ -191,15 +192,15 @@ The orchestrator exits with code 1 if any tag failed in the run, 0 otherwise. CI
 
 ## Working with non-canonical SIT names
 
-A common gotcha: SIT lists exported from Microsoft documentation, planning spreadsheets, or DLP policy templates often use *almost* the right names. Examples we've hit:
+A common gotcha: SIT lists exported from Microsoft documentation, planning spreadsheets, or DLP policy templates often use _almost_ the right names. Examples we've hit:
 
-| What the spreadsheet says | What the tenant actually returns |
-|---|---|
-| `All credentials` | `All Credential Types` |
+| What the spreadsheet says          | What the tenant actually returns    |
+| ---------------------------------- | ----------------------------------- |
+| `All credentials`                  | `All Credential Types`              |
 | `Australia drivers license number` | `Australia Driver's License Number` |
-| `Germany passport number` | `German Passport Number` |
-| `Luxemburg passport number` | `Luxembourg Passport Number` |
-| `U.A.E. identity card number` | `UAE Identity Card Number` |
+| `Germany passport number`          | `German Passport Number`            |
+| `Luxemburg passport number`        | `Luxembourg Passport Number`        |
+| `U.A.E. identity card number`      | `UAE Identity Card Number`          |
 
 The orchestrator's `-NameLike` is case-insensitive (PowerShell `-like`), so case differences resolve automatically. But "All credentials" vs "All Credential Types" is a real semantic mismatch and won't match.
 

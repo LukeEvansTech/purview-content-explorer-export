@@ -1,10 +1,10 @@
 #!/usr/bin/env pwsh
-#Requires -Version 7.0
+#Requires -Version 5.1
 <#
 .SYNOPSIS
 Exports Microsoft Purview Content Explorer item-level data for one (TagType, TagName) across one or more workloads.
 
-Returns one row per item — file/email-level detail with paths, names, creators, etc.
+Returns one row per item - file/email-level detail with paths, names, creators, etc.
 
 .EXAMPLE
 ./Export-CEItems.ps1 -TagType SensitiveInformationType -TagName 'Credit Card Number'
@@ -106,7 +106,7 @@ foreach ($workload in $Workloads) {
 # If every attempted workload errored, surface this as a failure so the orchestrator marks
 # the tag as failed rather than reporting a misleading "succeeded with 0 rows".
 if ($workloadsAttempted -gt 0 -and $workloadsErrored -eq $workloadsAttempted) {
-    throw "all $workloadsAttempted workload(s) errored — see warnings above"
+    throw "all $workloadsAttempted workload(s) errored - see warnings above"
 }
 
 $partialNote = if ($workloadsErrored -gt 0) { " ($workloadsErrored of $workloadsAttempted workload(s) errored)" } else { '' }

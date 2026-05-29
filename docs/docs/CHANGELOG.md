@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. Format foll
 
 ## [Unreleased]
 
-Pre-release working state. Tag `v1.0.0` once the design has stabilised in real-tenant use.
+Prerelease working state. Tag `v1.0.0` once the design has stabilised in real-tenant use.
 
 ### Added
 
@@ -14,5 +14,9 @@ Pre-release working state. Tag `v1.0.0` once the design has stabilised in real-t
 - Pester unit tests for the pure-logic helpers (18 tests, run on Ubuntu / macOS / Windows in CI)
 - GitHub Actions workflows for tests, super-linter, and docs deploy
 - MkDocs Material documentation site
+
+### Changed
+
+- Lowered the `#Requires` floor from PowerShell 7.0 to 5.1 so the scripts run on stock Windows PowerShell 5.1. Made the pipeline `.Count` checks and CSV reads array-safe (`@(...)`) for strict-mode parity across 5.1 and 7. On 5.1, CSV output carries a UTF-8 BOM.
 
 [Unreleased]: https://github.com/LukeEvansTech/purview-content-explorer-export/commits/main/
