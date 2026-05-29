@@ -1,4 +1,4 @@
-# CEHelpers.psm1 — pure helper functions for Content Explorer sweep scripts.
+# CEHelpers.psm1 - pure helper functions for Content Explorer sweep scripts.
 # Cmdlet-calling logic lives in the top-level scripts; this module is offline-testable.
 
 function Get-CESafeName {
@@ -18,9 +18,12 @@ function Test-CETagNameFilter {
         [Parameter(Mandatory)][AllowEmptyCollection()][string[]]$NameLike,
         [Parameter(Mandatory)][AllowEmptyCollection()][string[]]$NameNotLike
     )
-    $included = ($NameLike.Count -eq 0) -or ($NameLike | Where-Object { $Name -like $_ }).Count -gt 0
+    # Wrap pipeline results in @() before .Count: on Windows PowerShell 5.1 a Where-Object
+    # that matches nothing returns $null, and $null.Count throws under Set-StrictMode -Latest.
+    # @(...) coerces to an array so .Count is always 0+. (PS 7 tolerates it either way.)
+    $included = ($NameLike.Count -eq 0) -or @($NameLike | Where-Object { $Name -like $_ }).Count -gt 0
     if (-not $included) { return $false }
-    $excluded = ($NameNotLike | Where-Object { $Name -like $_ }).Count -gt 0
+    $excluded = @($NameNotLike | Where-Object { $Name -like $_ }).Count -gt 0
     return -not $excluded
 }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-#Requires -Version 7.0
+#Requires -Version 5.1
 <#
 .SYNOPSIS
 Sweeps Content Explorer item-level data across all (or filtered) tags and workloads.
@@ -9,7 +9,7 @@ Sweeps Content Explorer item-level data across all (or filtered) tags and worklo
 #>
 [CmdletBinding()]
 param(
-    # Defaults to SensitiveInformationType only — the typical use case. Pass
+    # Defaults to SensitiveInformationType only - the typical use case. Pass
     # -TagTypes Retention,Sensitivity,TrainableClassifier (or any subset) to widen.
     [ValidateSet('Retention','SensitiveInformationType','Sensitivity','TrainableClassifier')]
     [string[]]$TagTypes = @('SensitiveInformationType'),
@@ -55,9 +55,11 @@ if ($NamesFile) {
     # Don't use Import-Csv directly: it treats lines starting with '#' as comments
     # (so a CSV with a '#' column header silently loses the header row). Read the
     # header line explicitly and pass it to ConvertFrom-Csv via -Header.
-    $rawLines = Get-Content -Path $NamesFile
+    # @() so a single-line file is still an array (otherwise $rawLines[0] would index into
+    # the string and .Count would behave differently across PS 5.1 / 7).
+    $rawLines = @(Get-Content -Path $NamesFile)
     if ($rawLines.Count -lt 2) {
-        throw "NamesFile '$NamesFile' has fewer than 2 lines — expected header + at least one row."
+        throw "NamesFile '$NamesFile' has fewer than 2 lines - expected header + at least one row."
     }
     $headers = $rawLines[0].Split(',') | ForEach-Object { ($_ -replace '^"|"$', '').Trim() }
     if ($headers -notcontains $NamesColumn) {
@@ -90,7 +92,7 @@ function Test-CEConnected {
             return $true
         }
     } catch {
-        # Get-ConnectionInformation not available — fall through to the live probe.
+        # Get-ConnectionInformation not available - fall through to the live probe.
     }
     try {
         Get-Label -ErrorAction Stop | Select-Object -First 1 | Out-Null
@@ -102,7 +104,7 @@ function Test-CEConnected {
 
 if (-not $DryRun) {
     if (-not (Test-CEConnected)) {
-        Write-Host 'Not connected to Security & Compliance PowerShell — running Connect-IPPSSession...'
+        Write-Host 'Not connected to Security & Compliance PowerShell - running Connect-IPPSSession...'
         Connect-IPPSSession | Out-Null
         if (-not (Test-CEConnected)) {
             throw 'Connect-IPPSSession appeared to succeed but Get-Label is still failing. Aborting.'
@@ -118,7 +120,7 @@ function Get-CETagInventory {
     )
     $inventory = New-Object System.Collections.Generic.List[object]
     # Some Get-* cmdlets (notably Get-Label) return multiple objects with the same DisplayName
-    # — e.g. published vs scoped variants. Track (TagType, Name) pairs so we don't dispatch
+    # - e.g. published vs scoped variants. Track (TagType, Name) pairs so we don't dispatch
     # the worker twice and overwrite the same per-tag CSV.
     $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
@@ -231,7 +233,7 @@ foreach ($tag in $inventory) {
 
 # --- Roll-up: concatenate all per-tag CSVs into items_all.csv ---
 $rollupFile = Join-Path $OutDir 'items_all.csv'
-# @(...) wrap forces an array even when Get-ChildItem returns a single FileInfo —
+# @(...) wrap forces an array even when Get-ChildItem returns a single FileInfo -
 # Set-StrictMode -Version Latest rejects .Count on a scalar.
 $perTagFiles = @(Get-ChildItem -Path $OutDir -Filter 'items_*.csv' |
     Where-Object { $_.Name -ne 'items_all.csv' })
@@ -244,7 +246,7 @@ if ($perTagFiles.Count -gt 0) {
     if ($rollupRows) {
         # Column union: collect every property name across all rows before re-emitting.
         # Without this, Import-Csv | Export-Csv adopts the first object's schema and silently
-        # drops columns that exist on later objects — e.g. SPO's SiteUrl when EXO files
+        # drops columns that exist on later objects - e.g. SPO's SiteUrl when EXO files
         # (which have UserPrincipalName instead) sort first.
         $allColumns = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
         foreach ($row in $rollupRows) {

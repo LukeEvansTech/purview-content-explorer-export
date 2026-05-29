@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-#Requires -Version 7.0
+#Requires -Version 5.1
 <#
 .SYNOPSIS
 Suggest canonical tenant SIT names for a CSV of SIT names that may use
@@ -11,7 +11,7 @@ Connects to Security & Compliance PowerShell, dumps the full SIT list,
 then for each name in the input CSV tries:
   1. Normalized-exact match (case-insensitive, no punctuation)
   2. Substring containment in either direction
-  3. Levenshtein distance (≤ 30% of name length)
+  3. Levenshtein distance (<= 30% of name length)
 
 Results are printed and exported to /tmp/sit_mappings.csv with a Suggested
 column you can review and apply manually.
@@ -71,7 +71,8 @@ $tenantMap = @{}
 foreach ($t in $tenant) { $tenantMap[(Get-Normalized $t)] = $t }
 
 # Read user CSV (handling the '#' header issue same way the orchestrator does)
-$rawLines = Get-Content -Path $NamesFile
+# @() so a single-line file is still an array (PS 5.1 / 7 indexing + .Count parity).
+$rawLines = @(Get-Content -Path $NamesFile)
 $headers = $rawLines[0].Split(',') | ForEach-Object { ($_ -replace '^"|"$', '').Trim() }
 $rows = $rawLines | Select-Object -Skip 1 | ConvertFrom-Csv -Header $headers
 
@@ -97,7 +98,7 @@ foreach ($row in $rows) {
         continue
     }
 
-    # Levenshtein-distance fallback (works on normalized strings, catches Germany↔German etc.)
+    # Levenshtein-distance fallback (works on normalized strings, catches Germany<->German etc.)
     $bestDist = [int]::MaxValue
     $bestMatch = $null
     foreach ($k in $tenantMap.Keys) {
@@ -108,7 +109,7 @@ foreach ($row in $rows) {
         }
     }
     # Accept only when the fuzzy match is "close enough" relative to source length.
-    # Threshold: distance ≤ 30% of source length (caps at ~6 chars for typical SIT names).
+    # Threshold: distance <= 30% of source length (caps at ~6 chars for typical SIT names).
     $threshold = [Math]::Max(3, [int]([Math]::Ceiling($norm.Length * 0.3)))
     if ($bestMatch -and $bestDist -le $threshold) {
         $mappings.Add([pscustomobject]@{ Source = $name; Suggested = $bestMatch; Type = "levenshtein-$bestDist" })
