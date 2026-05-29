@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file. Format foll
 
 ## [Unreleased]
 
-Pre-release working state. Tag `v1.0.0` once the design has stabilised in real-tenant use.
+Prerelease working state. Tag `v1.0.0` once the design has stabilised in real-tenant use.
 
 ### Added
 
