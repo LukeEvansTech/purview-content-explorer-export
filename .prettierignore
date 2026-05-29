@@ -1,0 +1,6 @@
+# MkDocs / Zensical documentation source.
+# Prettier's markdown formatter does not understand MkDocs admonitions
+# (`!!! note`, indented content blocks) and de-indents them, which breaks
+# rendering on the docs site. Exclude the docs tree from Prettier; markdownlint
+# and the docs build still cover these files.
+docs/

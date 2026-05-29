@@ -2,8 +2,8 @@
 
 ## Prerequisites
 
-- **PowerShell 7+.** The scripts declare `#Requires -Version 7.0` because they rely on member-access enumeration on pipelines, which doesn't work in PS 5.1. macOS, Windows, and Linux all work.
-- **`ExchangeOnlineManagement` module** (provides `Connect-IPPSSession` and `Export-ContentExplorerData`):
+- **PowerShell 5.1+ or PowerShell 7+.** The scripts declare `#Requires -Version 5.1`, so they run on stock Windows PowerShell 5.1 as well as PowerShell 7 (macOS, Windows, Linux). On 5.1, CSV output is UTF-8 *with* a BOM (PowerShell 7 omits it) — Excel, Power BI, and `Import-Csv` all read either form.
+- **`ExchangeOnlineManagement` module** (provides `Connect-IPPSSession` and `Export-ContentExplorerData`). Use **v3 or later** — on Windows PowerShell 5.1 the connection probe prefers `Get-ConnectionInformation`, which v3+ supplies (it falls back to `Get-Label` on older modules):
   ```powershell
   Install-Module ExchangeOnlineManagement -Scope CurrentUser
   ```
@@ -15,14 +15,14 @@
 
 ## Install
 
-Clone the repo — the scripts run in place:
+Clone the repository — the scripts run in place:
 
 ```bash
 git clone https://github.com/LukeEvansTech/purview-content-explorer-export.git
 cd purview-content-explorer-export
 ```
 
-The scripts are already executable in the repo. If `chmod` got stripped:
+The scripts are already executable in the repository. If `chmod` got stripped:
 
 ```bash
 chmod +x ./Invoke-CESweep.ps1 ./Export-CEItems.ps1
