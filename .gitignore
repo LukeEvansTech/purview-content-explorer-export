@@ -3,5 +3,6 @@ output/
 .vscode/
 .DS_Store
 .claude/
+CLAUDE.md
 testResults.xml
 site/
