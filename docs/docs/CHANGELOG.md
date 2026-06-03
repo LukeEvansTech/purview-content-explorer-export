@@ -21,4 +21,8 @@ Prerelease working state. Tag `v1.0.0` once the design has stabilised in real-te
 
 - Lowered the `#Requires` floor from PowerShell 7.0 to 5.1 so the scripts run on stock Windows PowerShell 5.1. Made the pipeline `.Count` checks and CSV reads array-safe (`@(...)`) for strict-mode parity across 5.1 and 7. On 5.1, CSV output carries a UTF-8 BOM.
 
+### Fixed
+
+- Worker crashed on Windows PowerShell 5.1 (`Cannot convert "System.Object[]" to "System.Int32"`) for items carrying multiple SITs. On 5.1, piping a top-level JSON array through `ConvertFrom-Json` emits the whole array as one object (PowerShell 7 unrolls it), collapsing the per-SIT entries in `Get-CEConfidenceSummary`. Fixed by capturing the parse to a variable before filtering.
+
 [Unreleased]: https://github.com/LukeEvansTech/purview-content-explorer-export/commits/main/
