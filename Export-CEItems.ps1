@@ -50,23 +50,31 @@ $allRecords = New-Object System.Collections.Generic.List[object]
 $workloadsAttempted = 0
 $workloadsErrored = 0
 
-# Resolve the swept SIT's GUID so each row can report that SIT's specific confidence
-# (TargetConfidence). Only applies to SensitiveInformationType sweeps. Bundle SITs
-# (e.g. "All Credential Types") return a GUID that isn't present in the per-item data,
-# so TargetConfidence stays N/A for them - ItemMaxConfidence is the signal there.
+# Enumerate every tenant SIT once to build a GUID -> name map. Used to (a) populate the
+# SensitiveInfoTypeNames column for every row (SIT GUIDs appear in the data for any tag type,
+# so this is built unconditionally) and (b) resolve this sweep's target SIT GUID for
+# TargetConfidence. Bundle SITs (e.g. "All Credential Types") have a GUID that isn't present
+# in the per-item data, so TargetConfidence stays N/A for them - ItemMaxConfidence is the
+# signal there.
+$sitNameMap = @{}
 $targetGuid = $null
-if ($TagType -eq 'SensitiveInformationType') {
-    try {
-        $sit = @(Get-DlpSensitiveInformationType -Identity $TagName -ErrorAction Stop)[0]
+try {
+    foreach ($sit in @(Get-DlpSensitiveInformationType -ErrorAction Stop)) {
+        $guid = $null
         foreach ($prop in 'Guid', 'Id', 'Identity') {
             if ($sit.PSObject.Properties[$prop]) {
                 $val = [string]$sit.$prop
-                if ($val -match '^[0-9a-fA-F-]{36}$') { $targetGuid = $val; break }
+                if ($val -match '^[0-9a-fA-F-]{36}$') { $guid = $val; break }
             }
         }
-    } catch {
-        Write-Warning "could not resolve GUID for SIT '$TagName' ($($_.Exception.Message)); TargetConfidence will be N/A"
+        if (-not $guid) { continue }
+        $sitNameMap[$guid] = [string]$sit.Name
+        if ($TagType -eq 'SensitiveInformationType' -and [string]$sit.Name -eq $TagName) {
+            $targetGuid = $guid
+        }
     }
+} catch {
+    Write-Warning "could not enumerate SITs for name/GUID resolution ($($_.Exception.Message)); SensitiveInfoTypeNames will be blank and TargetConfidence N/A"
 }
 
 foreach ($workload in $Workloads) {
@@ -115,6 +123,8 @@ foreach ($workload in $Workloads) {
                     $conf = Get-CEConfidenceSummary -Data ([string]$row['SensitiveInfoTypesData']) -TargetGuid $targetGuid
                     $row['TargetConfidence']  = $conf.TargetConfidence
                     $row['ItemMaxConfidence'] = $conf.ItemMaxConfidence
+                    # Friendly names for the SensitiveInfoTypes GUIDs (same order).
+                    $row['SensitiveInfoTypeNames'] = Get-CESitName -Guids ([string]$row['SensitiveInfoTypes']) -NameMap $sitNameMap
                     $allRecords.Add([pscustomobject]$row)
                 }
             }

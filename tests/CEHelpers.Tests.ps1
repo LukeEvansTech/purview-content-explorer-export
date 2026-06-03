@@ -142,3 +142,31 @@ Describe 'Get-CEConfidenceSummary' {
         }
     }
 }
+
+Describe 'Get-CESitName' {
+    BeforeAll {
+        $script:n1 = '11111111-1111-1111-1111-111111111111'
+        $script:n2 = '22222222-2222-2222-2222-222222222222'
+        $script:n3 = '33333333-3333-3333-3333-333333333333'  # deliberately absent from the map
+        $script:map = @{ $n1 = 'Credit Card Number'; $n2 = 'Microsoft Entra User Credentials' }
+    }
+
+    It 'resolves GUIDs to names in order' {
+        Get-CESitName -Guids "$n1,$n2" -NameMap $map |
+            Should -Be 'Credit Card Number, Microsoft Entra User Credentials'
+    }
+    It 'falls back to the raw GUID for an unknown id (nothing silently dropped)' {
+        Get-CESitName -Guids "$n1,$n3" -NameMap $map |
+            Should -Be "Credit Card Number, $n3"
+    }
+    It 'matches the GUID case-insensitively' {
+        Get-CESitName -Guids ($n1.ToUpper()) -NameMap $map | Should -Be 'Credit Card Number'
+    }
+    It 'trims whitespace around GUIDs' {
+        Get-CESitName -Guids "  $n1 ,  $n2  " -NameMap $map |
+            Should -Be 'Credit Card Number, Microsoft Entra User Credentials'
+    }
+    It 'returns an empty string for empty input' {
+        Get-CESitName -Guids '' -NameMap $map | Should -Be ''
+    }
+}
