@@ -100,4 +100,29 @@ function Get-CEConfidenceSummary {
     }
 }
 
-Export-ModuleMember -Function Get-CESafeName, Test-CETagNameFilter, Get-CETagTypeEnumeration, Get-CEConfidenceSummary
+function Get-CESitName {
+    # Resolve a comma-separated list of SIT GUIDs (the SensitiveInfoTypes column) to a
+    # comma-separated list of friendly names, preserving order. Unknown GUIDs fall back to
+    # the raw GUID so nothing is silently dropped (e.g. a SIT deleted since the data was made).
+    # $NameMap is a GUID -> name hashtable; PowerShell hashtable key lookup is case-insensitive.
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, Position=0)]
+        [AllowEmptyString()]
+        [AllowNull()]
+        [string]$Guids,
+
+        [Parameter(Mandatory, Position=1)]
+        [hashtable]$NameMap
+    )
+    if ([string]::IsNullOrWhiteSpace($Guids)) { return '' }
+    $names = foreach ($g in ($Guids -split ',')) {
+        $key = $g.Trim()
+        if ($key -eq '') { continue }
+        $name = $NameMap[$key]
+        if ($name) { $name } else { $key }
+    }
+    return ($names -join ', ')
+}
+
+Export-ModuleMember -Function Get-CESafeName, Test-CETagNameFilter, Get-CETagTypeEnumeration, Get-CEConfidenceSummary, Get-CESitName

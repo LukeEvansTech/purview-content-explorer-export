@@ -25,6 +25,7 @@ One per `(TagType, TagName)` combination that had at least one hit. Filename use
 | `SensitiveInfoTypesData` | from cmdlet | JSON array — see below |
 | `TargetConfidence` | added by worker | Confidence of the swept SIT in this item — see [Confidence columns](#confidence-columns) |
 | `ItemMaxConfidence` | added by worker | Strongest confidence of any SIT in this item — see [Confidence columns](#confidence-columns) |
+| `SensitiveInfoTypeNames` | added by worker | Friendly names for the `SensitiveInfoTypes` GUIDs, in the same order — see [SIT names](#sit-names) |
 
 ### `SensitiveInfoTypesData` JSON
 
@@ -53,6 +54,15 @@ The worker distils the JSON above into two sortable columns so you can filter an
 | `ItemMaxConfidence` | The strongest confidence of **any** SIT detected in the item. Always populated; this is the reliable signal for bundle sweeps. |
 
 To surface the most confident hits: filter `TargetConfidence` (or `ItemMaxConfidence` for bundles) to `3-High`, or sort that column descending.
+
+### SIT names
+
+`SensitiveInfoTypes` lists the **GUIDs** of every SIT detected in an item. The worker enumerates the
+tenant's SITs once (`Get-DlpSensitiveInformationType`) to build a GUID → name map, then emits
+`SensitiveInfoTypeNames` — the friendly names in the same order — so the detection detail is readable
+without manual lookups. A GUID with no matching name (e.g. a SIT deleted since the data was produced)
+falls back to printing the raw GUID, so nothing is silently dropped. These are SIT names only;
+`SensitivityLabel` and `TrainableClassifiers` GUIDs are left as-is.
 
 ## Roll-up — `items_all.csv`
 

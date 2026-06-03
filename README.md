@@ -19,25 +19,26 @@ It wraps the [`Export-ContentExplorerData`](https://learn.microsoft.com/en-us/po
 
 For every `(TagType, TagName)` combination that has hits in your tenant, you get a CSV with one row per matching item. Columns include:
 
-| Column                   | What it is                                                                                            |
-| ------------------------ | ----------------------------------------------------------------------------------------------------- |
-| `TagType`                | `SensitiveInformationType`, `Sensitivity`, `Retention`, or `TrainableClassifier`                      |
-| `TagName`                | The label/SIT/classifier name (e.g. `Credit Card Number`)                                             |
-| `Workload`               | `EXO`, `ODB`, `SPO`, or `Teams`                                                                       |
-| `Location`               | Same as workload (Microsoft includes both)                                                            |
-| `FileSourceUrl`          | Site / mailbox URL                                                                                    |
-| `FileUrl`                | Full path to the file (SPO/ODB) — empty for EXO/Teams                                                 |
-| `FileName`               | Filename (SPO/ODB), email subject (EXO), or "Posted in #channel" (Teams)                              |
-| `SensitiveInfoTypes`     | Comma-separated GUIDs of all SITs detected in this item                                               |
-| `SensitivityLabel`       | GUID of the sensitivity label applied (if any)                                                        |
-| `RetentionLabel`         | Retention label name (if any)                                                                         |
-| `TrainableClassifiers`   | Comma-separated GUIDs of trainable classifiers that fired                                             |
-| `UserCreated`            | Display name of creator                                                                               |
-| `UserModified`           | Display name of last modifier                                                                         |
-| `LastModifiedTime`       | UTC timestamp                                                                                         |
-| `SensitiveInfoTypesData` | JSON array with confidence-level match counts per SIT                                                 |
-| `TargetConfidence`       | Confidence of the swept SIT in this item (`3-High`/`2-Medium`/`1-Low`/`0-None`, or `N/A` for bundles) |
-| `ItemMaxConfidence`      | Strongest confidence of any SIT in the item — sort/filter on this to find the most confident hits     |
+| Column                   | What it is                                                                                                  |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `TagType`                | `SensitiveInformationType`, `Sensitivity`, `Retention`, or `TrainableClassifier`                            |
+| `TagName`                | The label/SIT/classifier name (e.g. `Credit Card Number`)                                                   |
+| `Workload`               | `EXO`, `ODB`, `SPO`, or `Teams`                                                                             |
+| `Location`               | Same as workload (Microsoft includes both)                                                                  |
+| `FileSourceUrl`          | Site / mailbox URL                                                                                          |
+| `FileUrl`                | Full path to the file (SPO/ODB) — empty for EXO/Teams                                                       |
+| `FileName`               | Filename (SPO/ODB), email subject (EXO), or "Posted in #channel" (Teams)                                    |
+| `SensitiveInfoTypes`     | Comma-separated GUIDs of all SITs detected in this item                                                     |
+| `SensitivityLabel`       | GUID of the sensitivity label applied (if any)                                                              |
+| `RetentionLabel`         | Retention label name (if any)                                                                               |
+| `TrainableClassifiers`   | Comma-separated GUIDs of trainable classifiers that fired                                                   |
+| `UserCreated`            | Display name of creator                                                                                     |
+| `UserModified`           | Display name of last modifier                                                                               |
+| `LastModifiedTime`       | UTC timestamp                                                                                               |
+| `SensitiveInfoTypesData` | JSON array with confidence-level match counts per SIT                                                       |
+| `TargetConfidence`       | Confidence of the swept SIT in this item (`3-High`/`2-Medium`/`1-Low`/`0-None`, or `N/A` for bundles)       |
+| `ItemMaxConfidence`      | Strongest confidence of any SIT in the item — sort/filter on this to find the most confident hits           |
+| `SensitiveInfoTypeNames` | Friendly names for the `SensitiveInfoTypes` GUIDs, same order (e.g. `Credit Card Number, General Password`) |
 
 A 15-row example is in [`examples/items_all.sample.csv`](examples/items_all.sample.csv) — fake but representative.
 

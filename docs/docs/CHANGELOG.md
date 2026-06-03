@@ -15,6 +15,7 @@ Prerelease working state. Tag `v1.0.0` once the design has stabilised in real-te
 - GitHub Actions workflows for tests, super-linter, and docs deploy
 - MkDocs Material documentation site
 - `TargetConfidence` and `ItemMaxConfidence` output columns — sortable `3-High`/`2-Medium`/`1-Low`/`0-None` labels distilled from `SensitiveInfoTypesData`, so you can filter/rank the most confident matches without parsing JSON (`ItemMaxConfidence` is the reliable signal for bundle SITs)
+- `SensitiveInfoTypeNames` output column — resolves the `SensitiveInfoTypes` GUIDs to friendly SIT names (same order), so the detection detail is readable without manual GUID lookups
 
 ### Changed
 
