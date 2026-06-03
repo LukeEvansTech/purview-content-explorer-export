@@ -1,6 +1,6 @@
 # Contributing
 
-PRs welcome. The codebase is small (two PowerShell scripts + a helper module + Pester tests) and the design rationale is in the git log.
+PRs welcome. The codebase is small (two PowerShell scripts + a helper module + Pester tests) and the design rationale is in the Git log.
 
 ## Architecture
 
@@ -23,7 +23,7 @@ The orchestrator imports the worker as a script (`& $workerScript ...`) per tag,
 
 ```powershell
 Invoke-Pester ./tests/CEHelpers.Tests.ps1 -CI
-# Expected: Tests Passed: 18
+# Expected: Tests Passed: 29
 ```
 
 Only pure-logic helpers (`Get-CESafeName`, `Test-CETagNameFilter`, `Get-CETagTypeEnumeration`) are unit-tested. Cmdlet integration is covered by manual smoke testing against a real M365 tenant — no offline equivalent exists for `Export-ContentExplorerData` and mocking it would just verify the mock.

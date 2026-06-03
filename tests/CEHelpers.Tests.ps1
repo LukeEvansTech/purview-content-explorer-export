@@ -17,7 +17,10 @@ Describe 'Get-CESafeName' {
         Get-CESafeName 'A  B' | Should -Be 'A__B'
     }
     It 'handles unicode by replacing with underscore' {
-        Get-CESafeName 'Café' | Should -Be 'Caf_'
+        # Build the accented name from an ASCII escape so this source file stays pure ASCII
+        # (a literal non-ASCII char would trip PSUseBOMForUnicodeEncodedFile, and we
+        # deliberately ship these scripts BOM-less so the Unix shebang keeps working).
+        Get-CESafeName ('Caf' + [char]0x00E9) | Should -Be 'Caf_'
     }
     It 'returns empty string for empty input' {
         Get-CESafeName '' | Should -Be ''
@@ -71,5 +74,71 @@ Describe 'Get-CETagTypeEnumeration' {
     }
     It 'throws on unknown TagType' {
         { Get-CETagTypeEnumeration -TagType 'Bogus' } | Should -Throw
+    }
+}
+
+Describe 'Get-CEConfidenceSummary' {
+    # GUIDs used across the SensitiveInfoTypesData fixtures.
+    BeforeAll {
+        $script:g1 = '11111111-1111-1111-1111-111111111111'
+        $script:g2 = '22222222-2222-2222-2222-222222222222'
+        $script:g3 = '33333333-3333-3333-3333-333333333333'
+    }
+
+    Context 'ItemMaxConfidence (highest bucket across all SITs in the item)' {
+        It 'is 3-High when any SIT has a high-confidence match' {
+            $data = "[{`"Id`":`"$g1`",`"LowConfidenceMatch`":9,`"MediumConfidenceMatch`":0,`"HighConfidenceMatch`":0},{`"Id`":`"$g2`",`"LowConfidenceMatch`":4,`"MediumConfidenceMatch`":4,`"HighConfidenceMatch`":2}]"
+            (Get-CEConfidenceSummary -Data $data).ItemMaxConfidence | Should -Be '3-High'
+        }
+        It 'is 2-Medium when the strongest is medium' {
+            $data = "[{`"Id`":`"$g1`",`"LowConfidenceMatch`":9,`"MediumConfidenceMatch`":0,`"HighConfidenceMatch`":0},{`"Id`":`"$g2`",`"LowConfidenceMatch`":4,`"MediumConfidenceMatch`":4,`"HighConfidenceMatch`":0}]"
+            (Get-CEConfidenceSummary -Data $data).ItemMaxConfidence | Should -Be '2-Medium'
+        }
+        It 'is 1-Low when the strongest is low' {
+            $data = "[{`"Id`":`"$g1`",`"LowConfidenceMatch`":3,`"MediumConfidenceMatch`":0,`"HighConfidenceMatch`":0}]"
+            (Get-CEConfidenceSummary -Data $data).ItemMaxConfidence | Should -Be '1-Low'
+        }
+        It 'is 0-None when every bucket is zero' {
+            $data = "[{`"Id`":`"$g1`",`"LowConfidenceMatch`":0,`"MediumConfidenceMatch`":0,`"HighConfidenceMatch`":0}]"
+            (Get-CEConfidenceSummary -Data $data).ItemMaxConfidence | Should -Be '0-None'
+        }
+    }
+
+    Context 'TargetConfidence (confidence of the swept SIT, by GUID)' {
+        It 'is the matched GUID''s level when present' {
+            $data = "[{`"Id`":`"$g1`",`"LowConfidenceMatch`":9,`"MediumConfidenceMatch`":9,`"HighConfidenceMatch`":0},{`"Id`":`"$g2`",`"LowConfidenceMatch`":4,`"MediumConfidenceMatch`":0,`"HighConfidenceMatch`":0}]"
+            (Get-CEConfidenceSummary -Data $data -TargetGuid $g1).TargetConfidence | Should -Be '2-Medium'
+            (Get-CEConfidenceSummary -Data $data -TargetGuid $g2).TargetConfidence | Should -Be '1-Low'
+        }
+        It 'matches the GUID case-insensitively' {
+            $data = "[{`"Id`":`"$g1`",`"LowConfidenceMatch`":1,`"MediumConfidenceMatch`":1,`"HighConfidenceMatch`":1}]"
+            (Get-CEConfidenceSummary -Data $data -TargetGuid $g1.ToUpper()).TargetConfidence | Should -Be '3-High'
+        }
+        It 'is N/A when the target GUID is not present in the item (e.g. bundle SITs)' {
+            $data = "[{`"Id`":`"$g1`",`"LowConfidenceMatch`":1,`"MediumConfidenceMatch`":0,`"HighConfidenceMatch`":0}]"
+            (Get-CEConfidenceSummary -Data $data -TargetGuid $g3).TargetConfidence | Should -Be 'N/A'
+        }
+        It 'is N/A when no target GUID is supplied' {
+            $data = "[{`"Id`":`"$g1`",`"LowConfidenceMatch`":1,`"MediumConfidenceMatch`":0,`"HighConfidenceMatch`":0}]"
+            (Get-CEConfidenceSummary -Data $data).TargetConfidence | Should -Be 'N/A'
+        }
+    }
+
+    Context 'degenerate input' {
+        It 'returns 0-None / N/A for an empty data string' {
+            $r = Get-CEConfidenceSummary -Data ''
+            $r.ItemMaxConfidence | Should -Be '0-None'
+            $r.TargetConfidence  | Should -Be 'N/A'
+        }
+        It 'returns 0-None / N/A for an empty JSON array' {
+            $r = Get-CEConfidenceSummary -Data '[]' -TargetGuid $g1
+            $r.ItemMaxConfidence | Should -Be '0-None'
+            $r.TargetConfidence  | Should -Be 'N/A'
+        }
+        It 'tolerates malformed JSON without throwing' {
+            $r = Get-CEConfidenceSummary -Data 'not json {' -TargetGuid $g1
+            $r.ItemMaxConfidence | Should -Be '0-None'
+            $r.TargetConfidence  | Should -Be 'N/A'
+        }
     }
 }

@@ -50,6 +50,25 @@ $allRecords = New-Object System.Collections.Generic.List[object]
 $workloadsAttempted = 0
 $workloadsErrored = 0
 
+# Resolve the swept SIT's GUID so each row can report that SIT's specific confidence
+# (TargetConfidence). Only applies to SensitiveInformationType sweeps. Bundle SITs
+# (e.g. "All Credential Types") return a GUID that isn't present in the per-item data,
+# so TargetConfidence stays N/A for them - ItemMaxConfidence is the signal there.
+$targetGuid = $null
+if ($TagType -eq 'SensitiveInformationType') {
+    try {
+        $sit = @(Get-DlpSensitiveInformationType -Identity $TagName -ErrorAction Stop)[0]
+        foreach ($prop in 'Guid', 'Id', 'Identity') {
+            if ($sit.PSObject.Properties[$prop]) {
+                $val = [string]$sit.$prop
+                if ($val -match '^[0-9a-fA-F-]{36}$') { $targetGuid = $val; break }
+            }
+        }
+    } catch {
+        Write-Warning "could not resolve GUID for SIT '$TagName' ($($_.Exception.Message)); TargetConfidence will be N/A"
+    }
+}
+
 foreach ($workload in $Workloads) {
     $workloadsAttempted++
     Write-Host "  workload=$workload"
@@ -92,6 +111,10 @@ foreach ($workload in $Workloads) {
                     foreach ($prop in $rec.PSObject.Properties) {
                         $row[$prop.Name] = $prop.Value
                     }
+                    # Derived, sortable confidence columns from SensitiveInfoTypesData.
+                    $conf = Get-CEConfidenceSummary -Data ([string]$row['SensitiveInfoTypesData']) -TargetGuid $targetGuid
+                    $row['TargetConfidence']  = $conf.TargetConfidence
+                    $row['ItemMaxConfidence'] = $conf.ItemMaxConfidence
                     $allRecords.Add([pscustomobject]$row)
                 }
             }
