@@ -1,0 +1,58 @@
+# Zensical Configuration — purview-content-explorer-helpers
+[project]
+site_name = "purview-content-explorer-helpers"
+site_description = "Higher-level helpers for purview-content-explorer-export outputs"
+site_author = "Luke Evans"
+site_url = "https://lukeevanstech.github.io/purview-content-explorer-helpers/"
+copyright = "Copyright © 2026 Luke Evans"
+
+docs_dir = "docs"
+site_dir = "site"
+use_directory_urls = true
+dev_addr = "localhost:8000"
+
+[project.theme]
+name = "material"
+variant = "modern"
+language = "en"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+primary = "blue"
+accent = "light-blue"
+
+[project.theme.palette.toggle]
+icon = "material/brightness-7"
+name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+primary = "blue"
+accent = "light-blue"
+
+[project.theme.palette.toggle]
+icon = "material/brightness-4"
+name = "Switch to light mode"
+
+[project.theme.icon]
+repo = "fontawesome/brands/github"
+
+repo_url = "https://github.com/LukeEvansTech/purview-content-explorer-helpers/"
+repo_name = "LukeEvansTech/purview-content-explorer-helpers"
+edit_uri = "edit/main/docs/docs"
+
+[[nav]]
+Home = "index.md"
+
+[[nav]]
+"Functions" = [
+  { "Find-UnlabeledPII" = "functions/find-unlabeledpii.md" },
+  { "Get-LabelCoverageByWorkload" = "functions/get-labelcoveragebyworkload.md" },
+  { "Compare-ExportDelta" = "functions/compare-exportdelta.md" }
+]
+
+[markdown_extensions]
+admonition = {}
+toc = { permalink = true }
