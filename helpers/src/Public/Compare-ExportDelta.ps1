@@ -5,8 +5,10 @@ function Compare-ExportDelta {
 
     .DESCRIPTION
         Compares two folders of per-tag CSV exports and surfaces items that appeared, disappeared,
-        or moved between tags between the two runs. Uses Location as the join key and tag (CSV
-        BaseName) as the categorisation.
+        or moved between tags between the two runs. Uses Location as the join key. Each item's tag
+        set is taken from the rows' TagType/TagName columns ('TagType/TagName'), falling back to the
+        CSV BaseName for rows that lack those columns, so the diff is independent of how the files
+        are named.
 
     .PARAMETER Old
         Folder containing the earlier export.
@@ -29,14 +31,21 @@ function Compare-ExportDelta {
     function Read-Snapshot([string]$path) {
         $snap = @{}
         Get-ChildItem -Path (Resolve-Path $path) -Filter '*.csv' -File | ForEach-Object {
-            $tag = $_.BaseName
+            $baseName = $_.BaseName
             Import-Csv $_.FullName | ForEach-Object {
-                if ($_.PSObject.Properties.Name -contains 'Location') {
-                    if (-not $snap.ContainsKey($_.Location)) {
-                        $snap[$_.Location] = [System.Collections.Generic.HashSet[string]]::new()
-                    }
-                    [void]$snap[$_.Location].Add($tag)
+                $props = $_.PSObject.Properties.Name
+                if ($props -notcontains 'Location') { return }
+                $loc = [string]$_.Location
+                if ([string]::IsNullOrEmpty($loc)) { return }
+                $tag = if (($props -contains 'TagType') -and ($props -contains 'TagName')) {
+                    "$($_.TagType)/$($_.TagName)"
+                } else {
+                    $baseName
                 }
+                if (-not $snap.ContainsKey($loc)) {
+                    $snap[$loc] = [System.Collections.Generic.HashSet[string]]::new()
+                }
+                [void]$snap[$loc].Add($tag)
             }
         }
         return $snap

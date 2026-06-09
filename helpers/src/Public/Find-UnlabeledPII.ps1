@@ -5,18 +5,25 @@ function Find-UnlabeledPII {
         label applied.
 
     .DESCRIPTION
-        Reads the per-tag CSV files produced by purview-content-explorer-export and joins items
-        across the PII-classifier tags with the sensitivity-label tags. Returns the items that
-        appear under a PII classifier but not under any sensitivity-label tag.
+        Reads the per-tag CSV files produced by purview-content-explorer-export. Each row carries
+        TagType / TagName / Workload / Location columns, so PII items and labelled items are
+        identified from the row data rather than from filenames:
+
+        - a row is a sensitivity label when its TagType is 'Sensitivity';
+        - a row is a PII hit when its TagName matches one of -PIIClassifier (wildcards allowed).
+
+        Returns one object per distinct PII item (keyed by Location) that never appears under a
+        Sensitivity tag. When an item matches more than one PII classifier the names are joined.
 
     .PARAMETER Path
         Folder containing the per-tag CSV files (one CSV per Purview tag).
 
     .PARAMETER PIIClassifier
-        Name(s) of the Purview PII classifier(s) to inspect. Defaults to the common built-ins.
+        Name(s) of the Purview PII classifier(s) to inspect, matched against each row's TagName
+        with -like (so '*Social Security*' works). Defaults to a set of common built-ins.
 
     .EXAMPLE
-        Find-UnlabeledPII -Path ./exports/2026-05/
+        Find-UnlabeledPII -Path ./output/
 
     .OUTPUTS
         PSCustomObject for each unlabelled PII item.
@@ -36,46 +43,62 @@ function Find-UnlabeledPII {
     $resolved = Resolve-Path $Path
     Write-Verbose "Reading exports from $resolved"
 
-    $allCsv = Get-ChildItem -Path $resolved -Filter '*.csv' -File
-    if (-not $allCsv) {
+    $allCsv = @(Get-ChildItem -Path $resolved -Filter '*.csv' -File)
+    if ($allCsv.Count -eq 0) {
         Write-Warning "No CSV files found in $resolved"
         return
     }
 
-    # Heuristic: any CSV whose name matches a sensitivity-label tag pattern.
-    $labelTagPattern = '^(public|internal|confidential|restricted|highly confidential|general)'
-    $piiTagPattern   = ($PIIClassifier | ForEach-Object { [regex]::Escape($_) }) -join '|'
+    $labelled = [System.Collections.Generic.HashSet[string]]::new()
+    $piiByLoc = [ordered]@{}   # Location -> @{ Classifiers; Workload; ItemSize; Modified }
 
-    $piiCsv     = $allCsv | Where-Object { $_.BaseName -match $piiTagPattern }
-    $labelCsv   = $allCsv | Where-Object { $_.BaseName -match $labelTagPattern }
-
-    if (-not $piiCsv) {
-        Write-Warning "No CSV files matched the PII-classifier pattern; nothing to inspect."
-        return
-    }
-
-    $labelledKeys = @{}
-    foreach ($csv in $labelCsv) {
+    foreach ($csv in $allCsv) {
         Import-Csv $csv.FullName | ForEach-Object {
-            if ($_.PSObject.Properties.Name -contains 'Location') {
-                $labelledKeys[$_.Location] = $true
+            $props = $_.PSObject.Properties.Name
+            if ($props -notcontains 'Location' -or $props -notcontains 'TagType') { return }
+            $loc = [string]$_.Location
+            if ([string]::IsNullOrEmpty($loc)) { return }
+
+            if ($_.TagType -eq 'Sensitivity') {
+                [void]$labelled.Add($loc)
+                return
             }
+
+            if ($props -notcontains 'TagName') { return }
+            $name = [string]$_.TagName
+            $isPii = $false
+            foreach ($pattern in $PIIClassifier) {
+                if ($name -like $pattern) { $isPii = $true; break }
+            }
+            if (-not $isPii) { return }
+
+            if (-not $piiByLoc.Contains($loc)) {
+                $piiByLoc[$loc] = @{
+                    Classifiers = [System.Collections.Generic.HashSet[string]]::new()
+                    Workload    = $(if ($props -contains 'Workload') { [string]$_.Workload } else { '' })
+                    ItemSize    = $(if ($props -contains 'ItemSize') { [string]$_.ItemSize } else { '' })
+                    Modified    = $(if ($props -contains 'Modified') { [string]$_.Modified } else { '' })
+                }
+            }
+            [void]$piiByLoc[$loc].Classifiers.Add($name)
         }
     }
 
-    foreach ($csv in $piiCsv) {
-        Import-Csv $csv.FullName | Where-Object {
-            $_.PSObject.Properties.Name -contains 'Location' -and
-            -not $labelledKeys.ContainsKey($_.Location)
-        } | ForEach-Object {
-            [PSCustomObject]@{
-                PSTypeName = 'PurviewContentExplorerHelpers.UnlabeledPII'
-                Classifier = $csv.BaseName
-                Location   = $_.Location
-                Workload   = $_.Workload
-                ItemSize   = $_.ItemSize
-                Modified   = $_.Modified
-            }
+    if ($piiByLoc.Count -eq 0) {
+        Write-Warning "No rows matched the PII classifier(s); nothing to inspect."
+        return
+    }
+
+    foreach ($loc in $piiByLoc.Keys) {
+        if ($labelled.Contains($loc)) { continue }
+        $info = $piiByLoc[$loc]
+        [PSCustomObject]@{
+            PSTypeName = 'PurviewContentExplorerHelpers.UnlabeledPII'
+            Classifier = (($info.Classifiers | Sort-Object) -join ', ')
+            Location   = $loc
+            Workload   = $info.Workload
+            ItemSize   = $info.ItemSize
+            Modified   = $info.Modified
         }
     }
 }

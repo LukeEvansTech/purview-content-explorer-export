@@ -20,7 +20,9 @@ Prerelease working state. Tag `v1.0.0` once the design has stabilised in real-te
 
 ### Fixed
 
-- `Compare-ExportDelta` threw `Cannot find an overload for "new"` on any non-empty export because a hashtable's `.Keys` (non-generic `IEnumerable`) was passed straight to the `HashSet[string]` constructor; the keys are now cast to `[string[]]` first
+- The `helpers/` reporting functions now identify labels and PII from each row's `TagType` / `TagName` / `Workload` columns instead of inferring tags from the CSV filename. The old filename match never matched the exporter's real `items_<TagType>_<safeName>.csv` output, so `Find-UnlabeledPII` and `Get-LabelCoverageByWorkload` silently found no labels end-to-end.
+- `Get-LabelCoverageByWorkload` now de-duplicates items by `(Workload, Location)`, so an item matching several tags is counted once rather than inflating the totals.
+- `Compare-ExportDelta` threw `Cannot find an overload for "new"` on any non-empty export because a hashtable's `.Keys` (non-generic `IEnumerable`) was passed straight to the `HashSet[string]` constructor; the keys are now cast to `[string[]]` first. It also keys an item's tag set off `TagType/TagName` rather than the filename, so a renamed export is no longer reported as a change.
 
 ### Changed
 

@@ -4,15 +4,21 @@ function Get-LabelCoverageByWorkload {
         Compute sensitivity-label coverage rates broken down by Microsoft 365 workload.
 
     .DESCRIPTION
-        Reads per-tag CSV exports produced by purview-content-explorer-export. Aggregates total
-        items per workload and the subset bearing any sensitivity label, then emits a coverage
-        percentage per workload.
+        Reads per-tag CSV exports produced by purview-content-explorer-export. Each row carries
+        TagType / TagName / Workload / Location columns, so coverage is computed from the row data
+        rather than from filenames: items are de-duplicated by (Workload, Location), and an item
+        counts as labelled when it appears in any row whose TagType is 'Sensitivity'. Emits a
+        coverage percentage per workload.
+
+        For coverage to be meaningful the export folder must contain both the Sensitivity-label
+        sweep and whatever other tags you want counted in the denominator. Rows without a Workload
+        or Location value (e.g. a header-only empty export) are ignored.
 
     .PARAMETER Path
         Folder containing the per-tag CSV files.
 
     .EXAMPLE
-        Get-LabelCoverageByWorkload -Path ./exports/2026-05/ | Format-Table
+        Get-LabelCoverageByWorkload -Path ./output/ | Format-Table
 
     .OUTPUTS
         PSCustomObject per workload.
@@ -23,27 +29,34 @@ function Get-LabelCoverageByWorkload {
     )
 
     $resolved = Resolve-Path $Path
-    $labelTagPattern = '^(public|internal|confidential|restricted|highly confidential|general)'
+    Write-Verbose "Reading exports from $resolved"
 
+    # workload -> @{ All = distinct Locations; Labelled = distinct Locations with a Sensitivity tag }
     $byWorkload = @{}
 
     Get-ChildItem -Path $resolved -Filter '*.csv' -File | ForEach-Object {
-        $isLabelTag = $_.BaseName -match $labelTagPattern
         Import-Csv $_.FullName | ForEach-Object {
+            $props = $_.PSObject.Properties.Name
+            if ($props -notcontains 'Workload' -or $props -notcontains 'Location') { return }
             $w = $_.Workload
+            if ([string]::IsNullOrEmpty($w)) { return }
+
             if (-not $byWorkload.ContainsKey($w)) {
-                $byWorkload[$w] = @{ Total = 0; Labelled = 0 }
+                $byWorkload[$w] = @{
+                    All      = [System.Collections.Generic.HashSet[string]]::new()
+                    Labelled = [System.Collections.Generic.HashSet[string]]::new()
+                }
             }
-            $byWorkload[$w].Total++
-            if ($isLabelTag) {
-                $byWorkload[$w].Labelled++
+            [void]$byWorkload[$w].All.Add([string]$_.Location)
+            if (($props -contains 'TagType') -and ($_.TagType -eq 'Sensitivity')) {
+                [void]$byWorkload[$w].Labelled.Add([string]$_.Location)
             }
         }
     }
 
     foreach ($w in $byWorkload.Keys | Sort-Object) {
-        $total    = $byWorkload[$w].Total
-        $labelled = $byWorkload[$w].Labelled
+        $total    = $byWorkload[$w].All.Count
+        $labelled = $byWorkload[$w].Labelled.Count
         [PSCustomObject]@{
             PSTypeName  = 'PurviewContentExplorerHelpers.LabelCoverage'
             Workload    = $w
