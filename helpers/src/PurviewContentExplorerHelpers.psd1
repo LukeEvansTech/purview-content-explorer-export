@@ -6,7 +6,7 @@
     CompanyName       = 'LukeEvansTech'
     Copyright         = '(c) 2026 Luke Evans. All rights reserved.'
     Description       = 'Higher-level helpers for Microsoft Purview Content Explorer exports produced by purview-content-explorer-export.'
-    PowerShellVersion = '7.4'
+    PowerShellVersion = '5.1'
     FunctionsToExport = @(
         'Find-UnlabeledPII',
         'Get-LabelCoverageByWorkload',
@@ -18,8 +18,8 @@
     PrivateData = @{
         PSData = @{
             Tags        = @('Microsoft365', 'Purview', 'Compliance', 'DLP', 'Reporting')
-            LicenseUri  = 'https://github.com/LukeEvansTech/purview-content-explorer-helpers/blob/main/LICENSE'
-            ProjectUri  = 'https://github.com/LukeEvansTech/purview-content-explorer-helpers'
+            LicenseUri  = 'https://github.com/LukeEvansTech/purview-content-explorer-export/blob/main/LICENSE'
+            ProjectUri  = 'https://github.com/LukeEvansTech/purview-content-explorer-export'
             ReleaseNotes = 'Initial public seed.'
         }
     }
