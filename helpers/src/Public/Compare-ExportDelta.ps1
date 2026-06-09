@@ -45,7 +45,9 @@ function Compare-ExportDelta {
     $oldSnap = Read-Snapshot $Old
     $newSnap = Read-Snapshot $New
 
-    $allLocations = [System.Collections.Generic.HashSet[string]]::new($oldSnap.Keys)
+    # Cast Keys to [string[]]: a hashtable's KeyCollection is non-generic IEnumerable,
+    # which does not satisfy the HashSet[string](IEnumerable[string]) constructor overload.
+    $allLocations = [System.Collections.Generic.HashSet[string]]::new([string[]]$oldSnap.Keys)
     foreach ($k in $newSnap.Keys) { [void]$allLocations.Add($k) }
 
     foreach ($loc in $allLocations) {

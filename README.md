@@ -77,8 +77,8 @@ chmod +x ./Invoke-CESweep.ps1 ./Export-CEItems.ps1
 Verify Pester tests still pass:
 
 ```bash
-pwsh -NoProfile -Command "Invoke-Pester ./tests/CEHelpers.Tests.ps1 -CI"
-# Expected: Tests Passed: 29
+pwsh -NoProfile -Command "Invoke-Pester ./tests -CI"
+# Expected: Tests Passed: 50
 ```
 
 ---
@@ -290,11 +290,11 @@ The most common cause is a TagName that doesn't actually exist in the tenant for
 ## Tests
 
 ```powershell
-Invoke-Pester ./tests/CEHelpers.Tests.ps1 -CI
-# Expected: Tests Passed: 29
+Invoke-Pester ./tests -CI
+# Expected: Tests Passed: 50
 ```
 
-Only pure-logic helpers (`Get-CESafeName`, `Test-CETagNameFilter`, `Get-CETagTypeEnumeration`) are unit-tested. Cmdlet integration is covered by manual smoke testing against a real M365 tenant — no offline equivalent exists for `Export-ContentExplorerData`.
+`tests/CEHelpers.Tests.ps1` covers the pure-logic exporter helpers (`Get-CESafeName`, `Test-CETagNameFilter`, `Get-CETagTypeEnumeration`, and the confidence/SIT-name parsers); `tests/Helpers.Tests.ps1` covers the `helpers/` reporting module against synthetic CSV fixtures. Cmdlet integration is covered by manual smoke testing against a real M365 tenant — no offline equivalent exists for `Export-ContentExplorerData`.
 
 ---
 
@@ -305,7 +305,8 @@ purview-content-explorer-export/
   Export-CEItems.ps1          # worker — one (TagType, TagName), N workloads
   Invoke-CESweep.ps1          # orchestrator — enumerate, filter, dispatch, roll-up
   lib/CEHelpers.psm1          # pure helpers (offline-testable)
-  tests/CEHelpers.Tests.ps1   # Pester unit tests
+  tests/CEHelpers.Tests.ps1   # Pester unit tests (exporter helpers)
+  tests/Helpers.Tests.ps1     # Pester unit tests (helpers/ reporting module)
   scripts/match-sits.ps1      # canonical-name matcher for non-canonical CSVs
   examples/
     items_all.sample.csv               # synthetic sample output

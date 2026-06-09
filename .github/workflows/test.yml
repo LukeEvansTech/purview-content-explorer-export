@@ -36,7 +36,7 @@ jobs:
 
       - name: Run Pester tests
         shell: pwsh
-        run: Invoke-Pester ./tests/CEHelpers.Tests.ps1 -CI
+        run: Invoke-Pester ./tests -CI
 
       - name: Upload test results
         if: always()
@@ -60,7 +60,11 @@ jobs:
             './Invoke-CESweep.ps1',
             './Export-CEItems.ps1',
             './scripts/match-sits.ps1',
-            './lib/CEHelpers.psm1'
+            './lib/CEHelpers.psm1',
+            './helpers/src/PurviewContentExplorerHelpers.psm1',
+            './helpers/src/Public/Find-UnlabeledPII.ps1',
+            './helpers/src/Public/Get-LabelCoverageByWorkload.ps1',
+            './helpers/src/Public/Compare-ExportDelta.ps1'
           )
           $errors = @()
           foreach ($f in $files) {
