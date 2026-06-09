@@ -238,6 +238,31 @@ Append-only, timestamped, one line per worker invocation:
 
 ---
 
+## Reporting helpers (`helpers/`)
+
+The exporter above is the _producer_ — it writes raw per-tag CSVs. The `helpers/` folder is a
+companion PowerShell module, `PurviewContentExplorerHelpers`, that _consumes_ that output to
+answer common reporting questions. (It was previously the separate
+`purview-content-explorer-helpers` repository, now consolidated here.)
+
+```powershell
+# Import the module by path from the repository root
+Import-Module ./helpers/src/PurviewContentExplorerHelpers.psd1
+
+# Where is unlabelled PII sitting?
+Find-UnlabeledPII -Path ./output/
+
+# Sensitivity-label coverage rate, per workload
+Get-LabelCoverageByWorkload -Path ./output/
+
+# What changed between two exports?
+Compare-ExportDelta -Old ./output-2026-04/ -New ./output-2026-05/
+```
+
+See [`helpers/README.md`](helpers/README.md) and the **Helpers** section of the docs site for details.
+
+---
+
 ## Troubleshooting
 
 **`Get-Label -ResultSize 1` fails with "parameter cannot be found"** — fixed in current code. The connection probe uses `Get-ConnectionInformation` first and falls back to `Get-Label | Select-Object -First 1`.
@@ -285,6 +310,9 @@ purview-content-explorer-export/
   examples/
     items_all.sample.csv               # synthetic sample output
     names-credentials.example.csv      # sample curated SIT list (52 names)
+  helpers/                    # PurviewContentExplorerHelpers — reporting module over the CSV output
+    src/                      #   module (psd1/psm1 + Public/*.ps1)
+    README.md
   output/                     # gitignored, created at runtime
 ```
 
