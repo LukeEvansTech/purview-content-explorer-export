@@ -164,7 +164,7 @@ Describe 'Compare-ExportDelta' {
     It 'flags an item whose tag set changed as Reclassified, using TagType/TagName' {
         $recl = $script:delta | Where-Object Location -eq 'item-a'
         $recl.Change | Should -Be 'Reclassified'
-        ($recl.OldTags -split ',' | Sort-Object) |
+        ($recl.OldTags -split ', ' | Sort-Object) |
             Should -Be @('SensitiveInformationType/Credit Card Number', 'Sensitivity/Confidential')
         $recl.NewTags | Should -Be 'SensitiveInformationType/Credit Card Number'
     }

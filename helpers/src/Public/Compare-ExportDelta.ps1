@@ -64,11 +64,11 @@ function Compare-ExportDelta {
         $inNew = $newSnap.ContainsKey($loc)
 
         if ($inOld -and -not $inNew) {
-            [PSCustomObject]@{ Location = $loc; Change = 'Removed'; OldTags = ($oldSnap[$loc] -join ','); NewTags = '' }
+            [PSCustomObject]@{ Location = $loc; Change = 'Removed'; OldTags = ($oldSnap[$loc] -join ', '); NewTags = '' }
         } elseif ($inNew -and -not $inOld) {
-            [PSCustomObject]@{ Location = $loc; Change = 'Added';   OldTags = '';                          NewTags = ($newSnap[$loc] -join ',') }
+            [PSCustomObject]@{ Location = $loc; Change = 'Added';   OldTags = '';                          NewTags = ($newSnap[$loc] -join ', ') }
         } elseif (-not $oldSnap[$loc].SetEquals($newSnap[$loc])) {
-            [PSCustomObject]@{ Location = $loc; Change = 'Reclassified'; OldTags = ($oldSnap[$loc] -join ','); NewTags = ($newSnap[$loc] -join ',') }
+            [PSCustomObject]@{ Location = $loc; Change = 'Reclassified'; OldTags = ($oldSnap[$loc] -join ', '); NewTags = ($newSnap[$loc] -join ', ') }
         }
     }
 }
