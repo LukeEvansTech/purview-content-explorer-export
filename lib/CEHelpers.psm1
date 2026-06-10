@@ -75,8 +75,15 @@ function Get-CEConfidenceSummary {
     $entries = @()
     if (-not [string]::IsNullOrWhiteSpace($Data)) {
         try {
-            # Drop nulls so member access stays safe under Set-StrictMode -Latest.
-            $entries = @($Data | ConvertFrom-Json | Where-Object { $null -ne $_ })
+            # Assign the parse to a variable BEFORE piping. On Windows PowerShell 5.1,
+            # ConvertFrom-Json writes a top-level JSON array to the pipeline as a SINGLE
+            # object (PS 7 unrolls it). Piping it straight into Where-Object there collapses
+            # every entry into one nested Object[] element, which then breaks per-entry member
+            # access ([int]$e.HighConfidenceMatch becomes [int] of an Object[] -> a cast error).
+            # Capturing to $parsed first, then piping the variable, enumerates correctly on both
+            # editions. Do NOT fold this back into a single `$Data | ConvertFrom-Json | ...` pipe.
+            $parsed = ConvertFrom-Json $Data
+            $entries = @($parsed | Where-Object { $null -ne $_ })
         } catch {
             $entries = @()  # malformed JSON: keep defaults rather than break the export
         }
