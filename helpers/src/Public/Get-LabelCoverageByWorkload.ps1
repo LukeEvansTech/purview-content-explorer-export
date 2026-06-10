@@ -4,15 +4,18 @@ function Get-LabelCoverageByWorkload {
         Compute sensitivity-label coverage rates broken down by Microsoft 365 workload.
 
     .DESCRIPTION
-        Reads per-tag CSV exports produced by purview-content-explorer-export. Each row carries
-        TagType / TagName / Workload / Location columns, so coverage is computed from the row data
-        rather than from filenames: items are de-duplicated by (Workload, Location), and an item
-        counts as labelled when it appears in any row whose TagType is 'Sensitivity'. Emits a
-        coverage percentage per workload.
+        Reads per-tag CSV exports produced by purview-content-explorer-export. Coverage is computed
+        from the row data, never from filenames: items are identified by FileUrl (SPO/ODB) falling
+        back to FileSourceUrl+FileName (EXO/Teams) - the cmdlet's Location column duplicates
+        Workload and is NOT an item identity. Items are de-duplicated per workload, and an item
+        counts as labelled when any of its rows carries a non-empty SensitivityLabel value (the
+        exporter writes the applied label's GUID on every row, whatever was swept) or appears
+        under a row whose TagType is 'Sensitivity'.
 
-        For coverage to be meaningful the export folder must contain both the Sensitivity-label
-        sweep and whatever other tags you want counted in the denominator. Rows without a Workload
-        or Location value (e.g. a header-only empty export) are ignored.
+        The denominator is every distinct item in the folder, so include whatever sweeps define
+        "items worth labelling". The items_all.csv roll-up is skipped (it duplicates every
+        per-tag row); files lacking the TagType/Workload columns and rows with no derivable item
+        identity are ignored.
 
     .PARAMETER Path
         Folder containing the per-tag CSV files.
@@ -28,28 +31,37 @@ function Get-LabelCoverageByWorkload {
         [Parameter(Mandatory)][string]$Path
     )
 
-    $resolved = Resolve-Path $Path
-    Write-Verbose "Reading exports from $resolved"
+    Write-Verbose "Reading exports from $Path"
 
-    # workload -> @{ All = distinct Locations; Labelled = distinct Locations with a Sensitivity tag }
+    # workload -> @{ All = distinct item identities; Labelled = those seen under a Sensitivity tag }
     $byWorkload = @{}
 
-    Get-ChildItem -Path $resolved -Filter '*.csv' -File | ForEach-Object {
-        Import-Csv $_.FullName | ForEach-Object {
-            $props = $_.PSObject.Properties.Name
-            if ($props -notcontains 'Workload' -or $props -notcontains 'Location') { return }
-            $w = $_.Workload
-            if ([string]::IsNullOrEmpty($w)) { return }
+    foreach ($csv in @(Get-CEPerTagCsvFile -Path $Path)) {
+        $rows = @(Import-Csv $csv.FullName)
+        if ($rows.Count -eq 0) { continue }
+        # Column set is identical for every row of one CSV - check once per file.
+        $cols = $rows[0].PSObject.Properties.Name
+        if ($cols -notcontains 'Workload' -or $cols -notcontains 'TagType') { continue }
+        $hasSensLabel = $cols -contains 'SensitivityLabel'
+
+        foreach ($row in $rows) {
+            $w = [string]$row.Workload
+            if ([string]::IsNullOrEmpty($w)) { continue }
+            $key = Get-CEItemIdentity -Row $row
+            if (-not $key) { continue }
 
             if (-not $byWorkload.ContainsKey($w)) {
                 $byWorkload[$w] = @{
-                    All      = [System.Collections.Generic.HashSet[string]]::new()
-                    Labelled = [System.Collections.Generic.HashSet[string]]::new()
+                    All      = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+                    Labelled = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
                 }
             }
-            [void]$byWorkload[$w].All.Add([string]$_.Location)
-            if (($props -contains 'TagType') -and ($_.TagType -eq 'Sensitivity')) {
-                [void]$byWorkload[$w].Labelled.Add([string]$_.Location)
+            [void]$byWorkload[$w].All.Add($key)
+            # The per-row SensitivityLabel GUID is authoritative for label-ness whatever was
+            # swept; a TagType of 'Sensitivity' marks the row as part of a label sweep.
+            if (($row.TagType -eq 'Sensitivity') -or
+                ($hasSensLabel -and -not [string]::IsNullOrEmpty([string]$row.SensitivityLabel))) {
+                [void]$byWorkload[$w].Labelled.Add($key)
             }
         }
     }

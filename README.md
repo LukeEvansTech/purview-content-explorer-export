@@ -78,7 +78,7 @@ Verify Pester tests still pass:
 
 ```bash
 pwsh -NoProfile -Command "Invoke-Pester ./tests -CI"
-# Expected: Tests Passed: 52
+# Expected: Tests Passed: 61
 ```
 
 ---
@@ -291,7 +291,7 @@ The most common cause is a TagName that doesn't actually exist in the tenant for
 
 ```powershell
 Invoke-Pester ./tests -CI
-# Expected: Tests Passed: 52
+# Expected: Tests Passed: 61
 ```
 
 `tests/CEHelpers.Tests.ps1` covers the pure-logic exporter helpers (`Get-CESafeName`, `Test-CETagNameFilter`, `Get-CETagTypeEnumeration`, and the confidence/SIT-name parsers); `tests/Helpers.Tests.ps1` covers the `helpers/` reporting module against synthetic CSV fixtures. Cmdlet integration is covered by manual smoke testing against a real M365 tenant — no offline equivalent exists for `Export-ContentExplorerData`.
@@ -312,7 +312,7 @@ purview-content-explorer-export/
     items_all.sample.csv               # synthetic sample output
     names-credentials.example.csv      # sample curated SIT list (52 names)
   helpers/                    # PurviewContentExplorerHelpers — reporting module over the CSV output
-    src/                      #   module (psd1/psm1 + Public/*.ps1)
+    src/                      #   module (psd1/psm1 + Public/ + Private/)
     README.md
   output/                     # gitignored, created at runtime
 ```

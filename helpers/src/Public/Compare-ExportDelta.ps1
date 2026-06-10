@@ -5,10 +5,13 @@ function Compare-ExportDelta {
 
     .DESCRIPTION
         Compares two folders of per-tag CSV exports and surfaces items that appeared, disappeared,
-        or moved between tags between the two runs. Uses Location as the join key. Each item's tag
-        set is taken from the rows' TagType/TagName columns ('TagType/TagName'), falling back to the
-        CSV BaseName for rows that lack those columns, so the diff is independent of how the files
-        are named.
+        or moved between tags between the two runs. Items are identified by FileUrl (SPO/ODB)
+        falling back to FileSourceUrl+FileName (EXO/Teams) - the cmdlet's Location column
+        duplicates Workload and is NOT an item identity. Each item's tag set is taken from the
+        rows' TagType/TagName columns ('TagType/TagName'), so the diff is independent of how the
+        files are named (a renamed export is not a change). The items_all.csv roll-up is skipped;
+        files lacking the TagType/TagName columns and rows with no derivable item identity are
+        ignored.
 
     .PARAMETER Old
         Folder containing the earlier export.
@@ -29,23 +32,22 @@ function Compare-ExportDelta {
     )
 
     function Read-Snapshot([string]$path) {
-        $snap = @{}
-        Get-ChildItem -Path (Resolve-Path $path) -Filter '*.csv' -File | ForEach-Object {
-            $baseName = $_.BaseName
-            Import-Csv $_.FullName | ForEach-Object {
-                $props = $_.PSObject.Properties.Name
-                if ($props -notcontains 'Location') { return }
-                $loc = [string]$_.Location
-                if ([string]::IsNullOrEmpty($loc)) { return }
-                $tag = if (($props -contains 'TagType') -and ($props -contains 'TagName')) {
-                    "$($_.TagType)/$($_.TagName)"
-                } else {
-                    $baseName
+        $snap = @{}   # item identity -> HashSet of 'TagType/TagName' (hashtable keys are case-insensitive)
+        foreach ($csv in @(Get-CEPerTagCsvFile -Path $path)) {
+            $rows = @(Import-Csv $csv.FullName)
+            if ($rows.Count -eq 0) { continue }
+            # Column set is identical for every row of one CSV - check once per file.
+            $cols = $rows[0].PSObject.Properties.Name
+            if ($cols -notcontains 'TagType' -or $cols -notcontains 'TagName') { continue }
+
+            foreach ($row in $rows) {
+                $key = Get-CEItemIdentity -Row $row
+                if (-not $key) { continue }
+                $tag = '{0}/{1}' -f $row.TagType, $row.TagName
+                if (-not $snap.ContainsKey($key)) {
+                    $snap[$key] = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
                 }
-                if (-not $snap.ContainsKey($loc)) {
-                    $snap[$loc] = [System.Collections.Generic.HashSet[string]]::new()
-                }
-                [void]$snap[$loc].Add($tag)
+                [void]$snap[$key].Add($tag)
             }
         }
         return $snap
@@ -54,21 +56,21 @@ function Compare-ExportDelta {
     $oldSnap = Read-Snapshot $Old
     $newSnap = Read-Snapshot $New
 
-    # Cast Keys to [string[]]: a hashtable's KeyCollection is non-generic IEnumerable,
-    # which does not satisfy the HashSet[string](IEnumerable[string]) constructor overload.
-    $everyLocation = [System.Collections.Generic.HashSet[string]]::new([string[]]$oldSnap.Keys)
-    foreach ($k in $newSnap.Keys) { [void]$everyLocation.Add($k) }
+    # Cast Keys to [string[]]: a hashtable's KeyCollection is non-generic IEnumerable, which does
+    # not satisfy the HashSet[string](IEnumerable[string], comparer) constructor overload.
+    $everyItem = [System.Collections.Generic.HashSet[string]]::new([string[]]$oldSnap.Keys, [System.StringComparer]::OrdinalIgnoreCase)
+    foreach ($k in $newSnap.Keys) { [void]$everyItem.Add($k) }
 
-    foreach ($loc in $everyLocation) {
-        $inOld = $oldSnap.ContainsKey($loc)
-        $inNew = $newSnap.ContainsKey($loc)
+    foreach ($item in $everyItem) {
+        $inOld = $oldSnap.ContainsKey($item)
+        $inNew = $newSnap.ContainsKey($item)
 
         if ($inOld -and -not $inNew) {
-            [PSCustomObject]@{ Location = $loc; Change = 'Removed'; OldTags = ($oldSnap[$loc] -join ', '); NewTags = '' }
+            [PSCustomObject]@{ Item = $item; Change = 'Removed'; OldTags = ($oldSnap[$item] -join ', '); NewTags = '' }
         } elseif ($inNew -and -not $inOld) {
-            [PSCustomObject]@{ Location = $loc; Change = 'Added';   OldTags = '';                          NewTags = ($newSnap[$loc] -join ', ') }
-        } elseif (-not $oldSnap[$loc].SetEquals($newSnap[$loc])) {
-            [PSCustomObject]@{ Location = $loc; Change = 'Reclassified'; OldTags = ($oldSnap[$loc] -join ', '); NewTags = ($newSnap[$loc] -join ', ') }
+            [PSCustomObject]@{ Item = $item; Change = 'Added';   OldTags = '';                            NewTags = ($newSnap[$item] -join ', ') }
+        } elseif (-not $oldSnap[$item].SetEquals($newSnap[$item])) {
+            [PSCustomObject]@{ Item = $item; Change = 'Reclassified'; OldTags = ($oldSnap[$item] -join ', '); NewTags = ($newSnap[$item] -join ', ') }
         }
     }
 }

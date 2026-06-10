@@ -2,7 +2,11 @@
 
 Compute sensitivity-label coverage per Microsoft 365 workload from a folder of per-tag CSV exports. Part of the `PurviewContentExplorerHelpers` module — it reads the exporter's CSV output and calls no Purview cmdlet.
 
-Items are de-duplicated by `(Workload, Location)`, so an item that matches several tags is counted once. An item counts as **labelled** when it appears in any row whose `TagType` is `Sensitivity`.
+Everything is derived from row data, never from filenames:
+
+- **Item identity** is `FileUrl` (SPO/ODB), falling back to `FileSourceUrl`+`FileName` (EXO/Teams). The cmdlet's `Location` column duplicates `Workload` and is not an item identity.
+- Items are de-duplicated per workload, so an item matching several tags is counted once.
+- An item counts as **labelled** when any of its rows carries a non-empty `SensitivityLabel` GUID (the exporter writes the applied label on every row, whatever was swept) or appears under a row whose `TagType` is `Sensitivity`.
 
 ## Synopsis
 
@@ -47,11 +51,11 @@ One `PSCustomObject` (type name `PurviewContentExplorerHelpers.LabelCoverage`) p
 |---|---|
 | `Workload` | `EXO` / `ODB` / `SPO` / `Teams` |
 | `TotalItems` | Distinct items seen in that workload across all tags |
-| `Labelled` | Distinct items that appear under a `Sensitivity` tag |
+| `Labelled` | Distinct items with a `SensitivityLabel` GUID or a `Sensitivity` tag row |
 | `Unlabelled` | `TotalItems - Labelled` |
 | `CoveragePct` | `Labelled / TotalItems * 100`, rounded to one decimal place |
 
 ## Notes
 
-- The denominator is every distinct item in the folder, so the export must contain the tags you want counted — typically the sensitivity-label sweep (`-TagTypes Sensitivity`) plus whatever SIT / classifier sweeps define "items worth labelling".
-- Rows without a `Workload` or `Location` value (for example a header-only empty export) are ignored.
+- The denominator is every distinct item in the folder, so include whatever sweeps define "items worth labelling" — typically the SIT / classifier sweeps, with a Sensitivity sweep adding the most complete label signal.
+- The `items_all.csv` roll-up is skipped (it duplicates every per-tag row) unless it is the only CSV in the folder. Files lacking the `TagType` / `Workload` columns and rows with no derivable item identity are ignored.

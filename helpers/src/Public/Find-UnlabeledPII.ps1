@@ -5,15 +5,20 @@ function Find-UnlabeledPII {
         label applied.
 
     .DESCRIPTION
-        Reads the per-tag CSV files produced by purview-content-explorer-export. Each row carries
-        TagType / TagName / Workload / Location columns, so PII items and labelled items are
-        identified from the row data rather than from filenames:
+        Reads the per-tag CSV files produced by purview-content-explorer-export. Labels and PII
+        hits are identified from the row data, never from filenames:
 
-        - a row is a sensitivity label when its TagType is 'Sensitivity';
+        - an item is labelled when any of its rows carries a non-empty SensitivityLabel value
+          (the exporter writes the applied label's GUID on every row, whatever was swept), or
+          when it appears under a row whose TagType is 'Sensitivity';
         - a row is a PII hit when its TagName matches one of -PIIClassifier (wildcards allowed).
 
-        Returns one object per distinct PII item (keyed by Location) that never appears under a
-        Sensitivity tag. When an item matches more than one PII classifier the names are joined.
+        Items are identified by FileUrl (SPO/ODB) falling back to FileSourceUrl+FileName
+        (EXO/Teams) - the cmdlet's Location column duplicates Workload and is NOT an item
+        identity. An item is reported only when it appears under a PII classifier and never under
+        a sensitivity label. When an item matches more than one PII classifier the names are
+        joined. The items_all.csv roll-up is skipped; files lacking the TagType column and rows
+        with no derivable item identity are ignored.
 
     .PARAMETER Path
         Folder containing the per-tag CSV files (one CSV per Purview tag).
@@ -40,65 +45,83 @@ function Find-UnlabeledPII {
         )
     )
 
-    $resolved = Resolve-Path $Path
-    Write-Verbose "Reading exports from $resolved"
+    Write-Verbose "Reading exports from $Path"
 
-    $allCsv = @(Get-ChildItem -Path $resolved -Filter '*.csv' -File)
+    $allCsv = @(Get-CEPerTagCsvFile -Path $Path)
     if ($allCsv.Count -eq 0) {
-        Write-Warning "No CSV files found in $resolved"
+        Write-Warning "No CSV files found in $Path"
         return
     }
 
-    $labelled = [System.Collections.Generic.HashSet[string]]::new()
-    $piiByLoc = [ordered]@{}   # Location -> @{ Classifiers; Workload; ItemSize; Modified }
+    $labelled  = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $piiByItem = [ordered]@{}   # item identity -> @{ Classifiers; Workload; FileName; FileUrl; FileSourceUrl; LastModifiedTime }
 
     foreach ($csv in $allCsv) {
-        Import-Csv $csv.FullName | ForEach-Object {
-            $props = $_.PSObject.Properties.Name
-            if ($props -notcontains 'Location' -or $props -notcontains 'TagType') { return }
-            $loc = [string]$_.Location
-            if ([string]::IsNullOrEmpty($loc)) { return }
+        $rows = @(Import-Csv $csv.FullName)
+        if ($rows.Count -eq 0) { continue }
+        # Column set is identical for every row of one CSV - check once per file.
+        $cols = $rows[0].PSObject.Properties.Name
+        if ($cols -notcontains 'TagType') { continue }
+        $hasTagName   = $cols -contains 'TagName'
+        $hasWorkload  = $cols -contains 'Workload'
+        $hasFileName  = $cols -contains 'FileName'
+        $hasFileUrl   = $cols -contains 'FileUrl'
+        $hasFileSrc   = $cols -contains 'FileSourceUrl'
+        $hasModified  = $cols -contains 'LastModifiedTime'
+        $hasSensLabel = $cols -contains 'SensitivityLabel'
 
-            if ($_.TagType -eq 'Sensitivity') {
-                [void]$labelled.Add($loc)
-                return
+        foreach ($row in $rows) {
+            $key = Get-CEItemIdentity -Row $row
+            if (-not $key) { continue }
+
+            # The per-row SensitivityLabel GUID is authoritative for label-ness whatever was
+            # swept; a TagType of 'Sensitivity' marks the row as part of a label sweep.
+            if ($hasSensLabel -and -not [string]::IsNullOrEmpty([string]$row.SensitivityLabel)) {
+                [void]$labelled.Add($key)
+            }
+            if ($row.TagType -eq 'Sensitivity') {
+                [void]$labelled.Add($key)
+                continue
             }
 
-            if ($props -notcontains 'TagName') { return }
-            $name = [string]$_.TagName
+            if (-not $hasTagName) { continue }
+            $name = [string]$row.TagName
             $isPii = $false
             foreach ($pattern in $PIIClassifier) {
                 if ($name -like $pattern) { $isPii = $true; break }
             }
-            if (-not $isPii) { return }
+            if (-not $isPii) { continue }
 
-            if (-not $piiByLoc.Contains($loc)) {
-                $piiByLoc[$loc] = @{
-                    Classifiers = [System.Collections.Generic.HashSet[string]]::new()
-                    Workload    = $(if ($props -contains 'Workload') { [string]$_.Workload } else { '' })
-                    ItemSize    = $(if ($props -contains 'ItemSize') { [string]$_.ItemSize } else { '' })
-                    Modified    = $(if ($props -contains 'Modified') { [string]$_.Modified } else { '' })
+            if (-not $piiByItem.Contains($key)) {
+                $piiByItem[$key] = @{
+                    Classifiers      = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+                    Workload         = $(if ($hasWorkload) { [string]$row.Workload } else { '' })
+                    FileName         = $(if ($hasFileName) { [string]$row.FileName } else { '' })
+                    FileUrl          = $(if ($hasFileUrl)  { [string]$row.FileUrl }  else { '' })
+                    FileSourceUrl    = $(if ($hasFileSrc)  { [string]$row.FileSourceUrl } else { '' })
+                    LastModifiedTime = $(if ($hasModified) { [string]$row.LastModifiedTime } else { '' })
                 }
             }
-            [void]$piiByLoc[$loc].Classifiers.Add($name)
+            [void]$piiByItem[$key].Classifiers.Add($name)
         }
     }
 
-    if ($piiByLoc.Count -eq 0) {
+    if ($piiByItem.Count -eq 0) {
         Write-Warning "No rows matched the PII classifier(s); nothing to inspect."
         return
     }
 
-    foreach ($loc in $piiByLoc.Keys) {
-        if ($labelled.Contains($loc)) { continue }
-        $info = $piiByLoc[$loc]
+    foreach ($key in $piiByItem.Keys) {
+        if ($labelled.Contains($key)) { continue }
+        $info = $piiByItem[$key]
         [PSCustomObject]@{
-            PSTypeName = 'PurviewContentExplorerHelpers.UnlabeledPII'
-            Classifier = (($info.Classifiers | Sort-Object) -join ', ')
-            Location   = $loc
-            Workload   = $info.Workload
-            ItemSize   = $info.ItemSize
-            Modified   = $info.Modified
+            PSTypeName       = 'PurviewContentExplorerHelpers.UnlabeledPII'
+            Classifier       = (($info.Classifiers | Sort-Object) -join ', ')
+            Workload         = $info.Workload
+            FileName         = $info.FileName
+            FileUrl          = $info.FileUrl
+            FileSourceUrl    = $info.FileSourceUrl
+            LastModifiedTime = $info.LastModifiedTime
         }
     }
 }

@@ -2,7 +2,13 @@
 
 Find items that a Purview classifier flagged as containing PII but that carry **no sensitivity label**. Part of the `PurviewContentExplorerHelpers` module — it reads the per-tag CSVs the exporter produced; it does not call any Purview cmdlet.
 
-A row is treated as a **label** when its `TagType` is `Sensitivity`, and as a **PII hit** when its `TagName` matches one of `-PIIClassifier`. An item (keyed by `Location`) is reported only when it appears under a PII classifier and never under a sensitivity label.
+Everything is derived from row data, never from filenames:
+
+- **Item identity** is `FileUrl` (SPO/ODB), falling back to `FileSourceUrl`+`FileName` (EXO/Teams). The cmdlet's `Location` column duplicates `Workload` and is not an item identity.
+- An item is **labelled** when any of its rows carries a non-empty `SensitivityLabel` GUID (the exporter writes the applied label on every row, whatever was swept), or when it appears under a row whose `TagType` is `Sensitivity`.
+- A row is a **PII hit** when its `TagName` matches one of `-PIIClassifier`.
+
+An item is reported only when it appears under a PII classifier and is never seen labelled.
 
 ## Synopsis
 
@@ -43,12 +49,15 @@ One `PSCustomObject` (type name `PurviewContentExplorerHelpers.UnlabeledPII`) pe
 | Property | Notes |
 |---|---|
 | `Classifier` | The matching PII classifier name(s), comma-separated when an item matched more than one |
-| `Location` | The item identity / path (the join key) |
 | `Workload` | `EXO` / `ODB` / `SPO` / `Teams` |
-| `ItemSize` | As exported (string) |
-| `Modified` | As exported (string) |
+| `FileName` | Filename (SPO/ODB), email subject (EXO), or "Posted in #channel" (Teams) |
+| `FileUrl` | Full path to the file (SPO/ODB only; empty for EXO/Teams) |
+| `FileSourceUrl` | Site/mailbox URL — site root for SPO/ODB, the user's UPN for EXO/Teams |
+| `LastModifiedTime` | UTC timestamp, as exported |
 
 ## Notes
 
-- For the result to mean anything, the folder must contain **both** the sensitivity-label sweep (`-TagTypes Sensitivity`) and the PII-classifier sweeps — otherwise there are no `Sensitivity` rows to exclude against and every PII hit looks unlabelled.
-- Rows without a `Location` value are ignored. If no row matches the classifier(s), a warning is written and nothing is returned.
+- The `items_all.csv` roll-up is skipped (it duplicates every per-tag row) unless it is the only CSV in the folder. Files lacking a `TagType` column and rows with no derivable item identity are ignored.
+- Item-identity matching is case-insensitive, so URL-casing drift between sweeps does not produce false positives.
+- Because the per-row `SensitivityLabel` GUID marks labelled items, a Sensitivity sweep in the folder is not strictly required — but including one is still the most complete label signal.
+- If no row matches the classifier(s), a warning is written and nothing is returned.
