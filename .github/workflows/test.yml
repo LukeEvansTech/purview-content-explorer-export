@@ -36,7 +36,7 @@ jobs:
 
       - name: Run Pester tests
         shell: pwsh
-        run: Invoke-Pester ./tests/CEHelpers.Tests.ps1 -CI
+        run: Invoke-Pester ./tests -CI
 
       - name: Upload test results
         if: always()
@@ -56,12 +56,8 @@ jobs:
       - name: Verify scripts parse
         shell: pwsh
         run: |
-          $files = @(
-            './Invoke-CESweep.ps1',
-            './Export-CEItems.ps1',
-            './scripts/match-sits.ps1',
-            './lib/CEHelpers.psm1'
-          )
+          # Parse-check every tracked PowerShell file - a glob can't silently skip a new one.
+          $files = @(git ls-files '*.ps1' '*.psm1' '*.psd1')
           $errors = @()
           foreach ($f in $files) {
             $parseErrors = $null

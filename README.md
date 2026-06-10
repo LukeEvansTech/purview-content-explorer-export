@@ -77,8 +77,8 @@ chmod +x ./Invoke-CESweep.ps1 ./Export-CEItems.ps1
 Verify Pester tests still pass:
 
 ```bash
-pwsh -NoProfile -Command "Invoke-Pester ./tests/CEHelpers.Tests.ps1 -CI"
-# Expected: Tests Passed: 29
+pwsh -NoProfile -Command "Invoke-Pester ./tests -CI"
+# Expected: Tests Passed: 61
 ```
 
 ---
@@ -238,6 +238,31 @@ Append-only, timestamped, one line per worker invocation:
 
 ---
 
+## Reporting helpers (`helpers/`)
+
+The exporter above is the _producer_ — it writes raw per-tag CSVs. The `helpers/` folder is a
+companion PowerShell module, `PurviewContentExplorerHelpers`, that _consumes_ that output to
+answer common reporting questions. (It was previously the separate
+`purview-content-explorer-helpers` repository, now consolidated here.)
+
+```powershell
+# Import the module by path from the repository root
+Import-Module ./helpers/src/PurviewContentExplorerHelpers.psd1
+
+# Where is unlabelled PII sitting?
+Find-UnlabeledPII -Path ./output/
+
+# Sensitivity-label coverage rate, per workload
+Get-LabelCoverageByWorkload -Path ./output/
+
+# What changed between two exports?
+Compare-ExportDelta -Old ./output-2026-04/ -New ./output-2026-05/
+```
+
+See [`helpers/README.md`](helpers/README.md) and the **Helpers** section of the docs site for details.
+
+---
+
 ## Troubleshooting
 
 **`Get-Label -ResultSize 1` fails with "parameter cannot be found"** — fixed in current code. The connection probe uses `Get-ConnectionInformation` first and falls back to `Get-Label | Select-Object -First 1`.
@@ -265,11 +290,11 @@ The most common cause is a TagName that doesn't actually exist in the tenant for
 ## Tests
 
 ```powershell
-Invoke-Pester ./tests/CEHelpers.Tests.ps1 -CI
-# Expected: Tests Passed: 29
+Invoke-Pester ./tests -CI
+# Expected: Tests Passed: 61
 ```
 
-Only pure-logic helpers (`Get-CESafeName`, `Test-CETagNameFilter`, `Get-CETagTypeEnumeration`) are unit-tested. Cmdlet integration is covered by manual smoke testing against a real M365 tenant — no offline equivalent exists for `Export-ContentExplorerData`.
+`tests/CEHelpers.Tests.ps1` covers the pure-logic exporter helpers (`Get-CESafeName`, `Test-CETagNameFilter`, `Get-CETagTypeEnumeration`, and the confidence/SIT-name parsers); `tests/Helpers.Tests.ps1` covers the `helpers/` reporting module against synthetic CSV fixtures. Cmdlet integration is covered by manual smoke testing against a real M365 tenant — no offline equivalent exists for `Export-ContentExplorerData`.
 
 ---
 
@@ -280,11 +305,15 @@ purview-content-explorer-export/
   Export-CEItems.ps1          # worker — one (TagType, TagName), N workloads
   Invoke-CESweep.ps1          # orchestrator — enumerate, filter, dispatch, roll-up
   lib/CEHelpers.psm1          # pure helpers (offline-testable)
-  tests/CEHelpers.Tests.ps1   # Pester unit tests
+  tests/CEHelpers.Tests.ps1   # Pester unit tests (exporter helpers)
+  tests/Helpers.Tests.ps1     # Pester unit tests (helpers/ reporting module)
   scripts/match-sits.ps1      # canonical-name matcher for non-canonical CSVs
   examples/
     items_all.sample.csv               # synthetic sample output
     names-credentials.example.csv      # sample curated SIT list (52 names)
+  helpers/                    # PurviewContentExplorerHelpers — reporting module over the CSV output
+    src/                      #   module (psd1/psm1 + Public/ + Private/)
+    README.md
   output/                     # gitignored, created at runtime
 ```
 

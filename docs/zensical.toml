@@ -69,6 +69,13 @@ Reference = [
 ]
 
 [[nav]]
+Helpers = [
+  { "Find-UnlabeledPII" = "helpers/find-unlabeledpii.md" },
+  { "Get-LabelCoverageByWorkload" = "helpers/get-labelcoveragebyworkload.md" },
+  { "Compare-ExportDelta" = "helpers/compare-exportdelta.md" },
+]
+
+[[nav]]
 Troubleshooting = "troubleshooting.md"
 
 [[nav]]

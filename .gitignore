@@ -6,3 +6,8 @@ output/
 CLAUDE.md
 testResults.xml
 site/
+.zensical/
+
+# helpers/ module build artifacts
+*.nupkg
+node_modules/
