@@ -56,10 +56,10 @@ function Compare-ExportDelta {
 
     # Cast Keys to [string[]]: a hashtable's KeyCollection is non-generic IEnumerable,
     # which does not satisfy the HashSet[string](IEnumerable[string]) constructor overload.
-    $allLocations = [System.Collections.Generic.HashSet[string]]::new([string[]]$oldSnap.Keys)
-    foreach ($k in $newSnap.Keys) { [void]$allLocations.Add($k) }
+    $everyLocation = [System.Collections.Generic.HashSet[string]]::new([string[]]$oldSnap.Keys)
+    foreach ($k in $newSnap.Keys) { [void]$everyLocation.Add($k) }
 
-    foreach ($loc in $allLocations) {
+    foreach ($loc in $everyLocation) {
         $inOld = $oldSnap.ContainsKey($loc)
         $inNew = $newSnap.ContainsKey($loc)
 
