@@ -1,6 +1,6 @@
 # Export-CEItems.ps1
 
-The worker. Handles a single `(TagType, TagName)` across one or more workloads — calls `Export-ContentExplorerData` with pagination and writes one CSV per call.
+The worker. Handles a single `(TagType, TagName)` across one or more workloads - calls `Export-ContentExplorerData` with pagination and writes one CSV per call.
 
 You normally don't call this directly; the orchestrator dispatches it. But it's runnable on its own for one-off exports.
 
@@ -24,7 +24,7 @@ You normally don't call this directly; the orchestrator dispatches it. But it's 
 | `-TagName` | `string` | required | Passed verbatim to `Export-ContentExplorerData` |
 | `-Workloads` | `string[]` | `EXO,ODB,SPO,Teams` | Subset to query |
 | `-OutDir` | `string` | `./output` | Where the per-tag CSV is written |
-| `-PageSize` | `int` | `1000` | 1–10000, passed to `Export-ContentExplorerData -PageSize` |
+| `-PageSize` | `int` | `1000` | 1-10000, passed to `Export-ContentExplorerData -PageSize` |
 | `-Force` | `switch` | off | Overwrite existing per-tag CSV |
 
 ## Examples
@@ -54,6 +54,6 @@ You normally don't call this directly; the orchestrator dispatches it. But it's 
 
 ## Edge cases handled
 
-- **`Export-ContentExplorerData` returns null** — happens when the cmdlet emits `Write-Error` without throwing terminating (we've seen this with "A server side error has occurred"). The worker checks `$null -eq $response` before indexing and surfaces a clearer message via the catch path.
-- **`1..0` array-range trap** — when `RecordsReturned` is 0, naive code would index `$response[1..0]` which in PowerShell is `[1, 0]` (a length-2 array of two indexes), not empty. The worker explicitly guards with `if ($recordsReturned -gt 0)`.
-- **Filename safe-name collisions** — two tag names that normalize to the same safe-name (e.g. `Credit/Debit Card` and `Credit-Debit Card` both → `Credit_Debit_Card`) would overwrite the same CSV. Rare in practice; not currently handled. The orchestrator's `(TagType, TagName)` dedupe doesn't catch this case.
+- **`Export-ContentExplorerData` returns null** - happens when the cmdlet emits `Write-Error` without throwing terminating (we've seen this with "A server side error has occurred"). The worker checks `$null -eq $response` before indexing and surfaces a clearer message via the catch path.
+- **`1..0` array-range trap** - when `RecordsReturned` is 0, naive code would index `$response[1..0]` which in PowerShell is `[1, 0]` (a length-2 array of two indexes), not empty. The worker explicitly guards with `if ($recordsReturned -gt 0)`.
+- **Filename safe-name collisions** - two tag names that normalize to the same safe-name (e.g. `Credit/Debit Card` and `Credit-Debit Card` both → `Credit_Debit_Card`) would overwrite the same CSV. Rare in practice; not currently handled. The orchestrator's `(TagType, TagName)` dedupe doesn't catch this case.

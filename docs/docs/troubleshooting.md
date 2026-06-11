@@ -8,7 +8,7 @@ Real footguns we hit during development and how the code handles each. If you hi
 
 ## `Connect-IPPSSession` hangs / browser window doesn't appear
 
-The popup sometimes hides behind other windows or doesn't focus. If after 60s nothing has happened, kill the pwsh process and try again. As an alternative, use device-code auth — prints a code in the terminal that you paste into [microsoft.com/devicelogin](https://microsoft.com/devicelogin):
+The popup sometimes hides behind other windows or doesn't focus. If after 60s nothing has happened, kill the pwsh process and try again. As an alternative, use device-code auth - prints a code in the terminal that you paste into [microsoft.com/devicelogin](https://microsoft.com/devicelogin):
 
 ```powershell
 Connect-IPPSSession -UseDeviceAuthentication
@@ -18,7 +18,7 @@ Connect-IPPSSession -UseDeviceAuthentication
 
 **Fixed in current code.** Happens when `Export-ContentExplorerData` emits `Write-Error` without throwing terminating, leaving `$response` null. The worker defensively checks for null and surfaces a clearer message ("server-side error the cmdlet did not throw").
 
-The most common cause is a `TagName` that doesn't actually exist in the tenant for the requested workload — verify enumeration coverage with `-DryRun`.
+The most common cause is a `TagName` that doesn't actually exist in the tenant for the requested workload - verify enumeration coverage with `-DryRun`.
 
 ## `The property 'Count' cannot be found on this object`
 
@@ -41,9 +41,9 @@ Benign warning emitted by `Export-ContentExplorerData` on every call. Ignore. To
 
 ## Sweep is much slower than expected
 
-Typical pace is **30–90 seconds per tag** depending on result size. Token expiry blocks sweeps at the ~60-min boundary.
+Typical pace is **30-90 seconds per tag** depending on result size. Token expiry blocks sweeps at the ~60-min boundary.
 
-If a tag with many thousands of items is taking many minutes, that's expected — the cmdlet paginates 10k items per call and large SITs (`All Credential Types`, `Client Secret / API Key`) genuinely have a lot of pages.
+If a tag with many thousands of items is taking many minutes, that's expected - the cmdlet paginates 10k items per call and large SITs (`All Credential Types`, `Client Secret / API Key`) genuinely have a lot of pages.
 
 Use `-NamesFile` with a curated list to avoid sweeping high-volume SITs you don't care about.
 

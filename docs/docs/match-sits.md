@@ -30,9 +30,9 @@ Helper. Connects to your tenant, dumps the canonical SIT list, then for each nam
 
 For each row's `Name`:
 
-1. **Normalized-exact** — strip non-alphanumerics, lowercase. If equal to a tenant name post-normalization, accept (`exact` or `normalized-exact`).
-2. **Substring containment** — if either side contains the other after normalization. Pick the candidate whose length is closest (`substring`).
-3. **Levenshtein distance** — compute edit distance against every tenant name; accept the closest if distance ≤ 30% of the source length (`levenshtein-N`).
+1. **Normalized-exact** - strip non-alphanumerics, lowercase. If equal to a tenant name post-normalization, accept (`exact` or `normalized-exact`).
+2. **Substring containment** - if either side contains the other after normalization. Pick the candidate whose length is closest (`substring`).
+3. **Levenshtein distance** - compute edit distance against every tenant name; accept the closest if distance ≤ 30% of the source length (`levenshtein-N`).
 4. Otherwise → `<<NO MATCH>>`.
 
 ## Output format
@@ -50,5 +50,5 @@ Germany passport number                      German Passport Number             
 ## Caveats
 
 - **Hand-review the Levenshtein matches.** The algorithm picks the closest by edit distance, which can produce false positives where unrelated names happen to be similar. We've seen `Czech passport number` get suggested as `Greece Passport Number` (5 edits, accepted) when the real answer was `Czech Republic Passport Number` (8 edits, rejected by threshold).
-- **No automatic apply.** The script only suggests — it never writes back to your source CSV. That's intentional: you should eyeball the suggestions before applying.
+- **No automatic apply.** The script only suggests - it never writes back to your source CSV. That's intentional: you should eyeball the suggestions before applying.
 - **Auth required.** Connects to Security & Compliance PowerShell on the same `Connect-IPPSSession` flow as the orchestrator.

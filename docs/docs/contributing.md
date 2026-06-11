@@ -26,7 +26,7 @@ Invoke-Pester ./tests/CEHelpers.Tests.ps1 -CI
 # Expected: Tests Passed: 29
 ```
 
-Only pure-logic helpers (`Get-CESafeName`, `Test-CETagNameFilter`, `Get-CETagTypeEnumeration`) are unit-tested. Cmdlet integration is covered by manual smoke testing against a real M365 tenant — no offline equivalent exists for `Export-ContentExplorerData` and mocking it would just verify the mock.
+Only pure-logic helpers (`Get-CESafeName`, `Test-CETagNameFilter`, `Get-CETagTypeEnumeration`) are unit-tested. Cmdlet integration is covered by manual smoke testing against a real M365 tenant - no offline equivalent exists for `Export-ContentExplorerData` and mocking it would just verify the mock.
 
 ## Building docs locally
 
@@ -40,15 +40,15 @@ mkdocs serve
 
 Two workflows:
 
-- **`test.yml`** — Pester on Ubuntu / macOS / Windows + parse-check on every script
-- **`lint.yml`** — Super-Linter v8 (PSScriptAnalyzer / yamllint / markdownlint / gitleaks / actions-lint)
-- **`docs.yml`** — Builds and deploys this site to GitHub Pages on every push to main
+- **`test.yml`** - Pester on Ubuntu / macOS / Windows + parse-check on every script
+- **`lint.yml`** - Super-Linter v8 (PSScriptAnalyzer / yamllint / markdownlint / gitleaks / actions-lint)
+- **`docs.yml`** - Builds and deploys this site to GitHub Pages on every push to main
 
 ## House rules
 
 1. Keep `Set-StrictMode -Version Latest` and `$ErrorActionPreference = 'Stop'` in both top-level scripts.
 2. Add Pester tests for any new pure-logic helper added to `lib/CEHelpers.psm1`.
-3. Don't introduce a dependency on a third-party PowerShell module that isn't already required (e.g. don't pull in `ImportExcel` — read CSVs).
+3. Don't introduce a dependency on a third-party PowerShell module that isn't already required (e.g. don't pull in `ImportExcel` - read CSVs).
 4. If you fix a footgun, add a one-line note in [Troubleshooting](troubleshooting.md) so the next person doesn't hit it.
 5. PRs should be green on `test.yml` and `lint.yml` before review.
 
@@ -61,4 +61,4 @@ Please include:
 3. The exact command you ran
 4. The first ~50 lines of the failure (or a summary if it's the same per-tag error 200 times)
 
-For tenant-side issues (e.g. cmdlets behaving differently than documented), include your tenant region if you're comfortable sharing — the cmdlet has known regional quirks.
+For tenant-side issues (e.g. cmdlets behaving differently than documented), include your tenant region if you're comfortable sharing - the cmdlet has known regional quirks.

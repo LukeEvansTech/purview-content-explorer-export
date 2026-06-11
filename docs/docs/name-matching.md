@@ -34,9 +34,9 @@ That's your hit-list of corrections to make.
 
 The companion script `scripts/match-sits.ps1` connects to your tenant, dumps the canonical SIT list, and for each name in your input CSV suggests the closest tenant match using:
 
-1. **Normalized-exact** — case-insensitive, no punctuation
-2. **Substring** — one name contains the other after normalization
-3. **Levenshtein distance** — accepts when the edit distance is ≤ 30% of the source length
+1. **Normalized-exact** - case-insensitive, no punctuation
+2. **Substring** - one name contains the other after normalization
+3. **Levenshtein distance** - accepts when the edit distance is ≤ 30% of the source length
 
 ```powershell
 ./scripts/match-sits.ps1 -NamesFile ./my-sits.csv
@@ -55,11 +55,11 @@ Germany passport number                      German Passport Number             
 ```
 
 !!! warning "Hand-review the Levenshtein matches"
-    Levenshtein can produce false positives where two unrelated names happen to be a few edits apart. We've seen `Czech passport number` get suggested as `Greece Passport Number` (5 edits) when the real match was `Czech Republic Passport Number` (8 edits — beyond the threshold). Always sanity-check the country/category prefix before accepting a suggestion.
+    Levenshtein can produce false positives where two unrelated names happen to be a few edits apart. We've seen `Czech passport number` get suggested as `Greece Passport Number` (5 edits) when the real match was `Czech Republic Passport Number` (8 edits - beyond the threshold). Always sanity-check the country/category prefix before accepting a suggestion.
 
 ## Why we don't just normalize at sweep time
 
-The orchestrator could in principle normalize both sides before comparing — strip punctuation, lowercase, even apply a Germany→German synonym table. We chose not to:
+The orchestrator could in principle normalize both sides before comparing - strip punctuation, lowercase, even apply a Germany→German synonym table. We chose not to:
 
 - **Predictability.** What you put in `-NamesFile` is what gets swept; the orchestrator never silently maps your input to something different.
 - **Visibility of typos.** If you misspell `Crdit Card Number`, you want a warning, not a silent match to something close-but-wrong.

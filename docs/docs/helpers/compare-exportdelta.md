@@ -1,6 +1,6 @@
 # Compare-ExportDelta
 
-Diff two export runs and surface items that appeared, disappeared, or moved between tags. Part of the `PurviewContentExplorerHelpers` module — it reads two folders of per-tag CSV output and calls no Purview cmdlet.
+Diff two export runs and surface items that appeared, disappeared, or moved between tags. Part of the `PurviewContentExplorerHelpers` module - it reads two folders of per-tag CSV output and calls no Purview cmdlet.
 
 Everything is derived from row data, never from filenames:
 
@@ -41,13 +41,13 @@ One `PSCustomObject` per changed item (unchanged items are omitted):
 
 | Property | Notes |
 |---|---|
-| `Item` | The item identity — `FileUrl`, or `FileSourceUrl` joined to `FileName` for EXO/Teams |
+| `Item` | The item identity - `FileUrl`, or `FileSourceUrl` joined to `FileName` for EXO/Teams |
 | `Change` | `Added` (only in new), `Removed` (only in old), or `Reclassified` (tag set differs) |
 | `OldTags` | `TagType/TagName` values in the old export, comma-separated |
 | `NewTags` | `TagType/TagName` values in the new export, comma-separated |
 
 ## Notes
 
-- Comparison is by tag membership, not row content — an item is `Reclassified` when the set of tags it appears under changes (for example it gained a sensitivity label or dropped a SIT match).
+- Comparison is by tag membership, not row content - an item is `Reclassified` when the set of tags it appears under changes (for example it gained a sensitivity label or dropped a SIT match).
 - Item-identity and tag matching are case-insensitive, so URL- or name-casing drift between runs is not reported as a change.
 - The `items_all.csv` roll-up is skipped in both folders (it duplicates every per-tag row) unless it is the only CSV present. Files lacking the `TagType`/`TagName` columns and rows with no derivable item identity are ignored.

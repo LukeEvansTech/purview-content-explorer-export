@@ -36,7 +36,7 @@ fi
 
 ## Long-running unattended sweeps
 
-For a fully unattended sweep (e.g. nightly), look at certificate-based authentication (CBA) with an Azure app registration assigned the **Content Explorer List Viewer** role group on its Service Principal. CBA tokens last much longer than interactive sign-in. This tool currently only supports interactive auth out of the box — extending it to CBA is a small change at the top of `Invoke-CESweep.ps1`.
+For a fully unattended sweep (e.g. nightly), look at certificate-based authentication (CBA) with an Azure app registration assigned the **Content Explorer List Viewer** role group on its Service Principal. CBA tokens last much longer than interactive sign-in. This tool currently only supports interactive auth out of the box - extending it to CBA is a small change at the top of `Invoke-CESweep.ps1`.
 
 See Microsoft's docs on [App-only authentication for Exchange Online PowerShell](https://learn.microsoft.com/en-us/powershell/exchange/app-only-auth-powershell-v2) for the setup.
 
@@ -48,6 +48,6 @@ The skip-existing check is purely filename-based:
 output/items_<TagType>_<safe-name>.csv
 ```
 
-If that file exists for a tag, the orchestrator emits a `skip` line and moves on — no API call, no auth needed. Tags that errored never wrote a per-tag CSV, so they're naturally retried.
+If that file exists for a tag, the orchestrator emits a `skip` line and moves on - no API call, no auth needed. Tags that errored never wrote a per-tag CSV, so they're naturally retried.
 
 This means you can also pre-seed `output/` with placeholder files to skip specific tags, or `rm` a single file to force re-export of just that one without using `-Force`.

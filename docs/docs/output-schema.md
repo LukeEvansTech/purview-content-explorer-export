@@ -1,6 +1,6 @@
 # Output schema
 
-## Per-tag CSV — `items_<TagType>_<safe-name>.csv`
+## Per-tag CSV - `items_<TagType>_<safe-name>.csv`
 
 One per `(TagType, TagName)` combination that had at least one hit. Filename uses a safe-name transform (any character outside `[A-Za-z0-9._-]` is replaced with `_`) so e.g. `Credit Card Number` → `items_SensitiveInformationType_Credit_Card_Number.csv`.
 
@@ -12,7 +12,7 @@ One per `(TagType, TagName)` combination that had at least one hit. Filename use
 | `TagName` | added by worker | The full label/SIT name |
 | `Workload` | added by worker | `EXO`, `ODB`, `SPO`, or `Teams` |
 | `Location` | from cmdlet | Same as `Workload` (Microsoft includes both) |
-| `FileSourceUrl` | from cmdlet | Site/mailbox URL — for SPO/ODB this is the site root, for EXO/Teams it's the user's UPN |
+| `FileSourceUrl` | from cmdlet | Site/mailbox URL - for SPO/ODB this is the site root, for EXO/Teams it's the user's UPN |
 | `FileUrl` | from cmdlet | Full path to the file (SPO/ODB only). Empty for EXO/Teams |
 | `FileName` | from cmdlet | Filename (SPO/ODB), email subject (EXO), or "Posted in #channel" (Teams) |
 | `SensitiveInfoTypes` | from cmdlet | Comma-separated GUIDs of all SITs detected in this item |
@@ -22,10 +22,10 @@ One per `(TagType, TagName)` combination that had at least one hit. Filename use
 | `UserCreated` | from cmdlet | Display name of the creator |
 | `UserModified` | from cmdlet | Display name of the last modifier |
 | `LastModifiedTime` | from cmdlet | UTC timestamp |
-| `SensitiveInfoTypesData` | from cmdlet | JSON array — see below |
-| `TargetConfidence` | added by worker | Confidence of the swept SIT in this item — see [Confidence columns](#confidence-columns) |
-| `ItemMaxConfidence` | added by worker | Strongest confidence of any SIT in this item — see [Confidence columns](#confidence-columns) |
-| `SensitiveInfoTypeNames` | added by worker | Friendly names for the `SensitiveInfoTypes` GUIDs, in the same order — see [SIT names](#sit-names) |
+| `SensitiveInfoTypesData` | from cmdlet | JSON array - see below |
+| `TargetConfidence` | added by worker | Confidence of the swept SIT in this item - see [Confidence columns](#confidence-columns) |
+| `ItemMaxConfidence` | added by worker | Strongest confidence of any SIT in this item - see [Confidence columns](#confidence-columns) |
+| `SensitiveInfoTypeNames` | added by worker | Friendly names for the `SensitiveInfoTypes` GUIDs, in the same order - see [SIT names](#sit-names) |
 
 ### `SensitiveInfoTypesData` JSON
 
@@ -42,15 +42,15 @@ For each detected SIT, this column contains a confidence-level breakdown:
 ]
 ```
 
-The `Id` matches one of the GUIDs in the `SensitiveInfoTypes` column. Numbers are match counts at each confidence level — useful for ranking or filtering ("show me only files with at least one high-confidence Credit Card match").
+The `Id` matches one of the GUIDs in the `SensitiveInfoTypes` column. Numbers are match counts at each confidence level - useful for ranking or filtering ("show me only files with at least one high-confidence Credit Card match").
 
 ### Confidence columns
 
-The worker distils the JSON above into two sortable columns so you can filter and rank in Excel/Power BI without parsing JSON. Both use the labels `3-High`, `2-Medium`, `1-Low`, `0-None` — the numeric prefix means a plain ascending/descending sort orders by strength.
+The worker distils the JSON above into two sortable columns so you can filter and rank in Excel/Power BI without parsing JSON. Both use the labels `3-High`, `2-Medium`, `1-Low`, `0-None` - the numeric prefix means a plain ascending/descending sort orders by strength.
 
 | Column | Meaning |
 |---|---|
-| `TargetConfidence` | The confidence of **the SIT you swept for** in this item (matched by GUID). `N/A` for non-SIT sweeps and for **bundle** SITs such as "All Credential Types" — the bundle's own GUID isn't in the item data, only its constituents. |
+| `TargetConfidence` | The confidence of **the SIT you swept for** in this item (matched by GUID). `N/A` for non-SIT sweeps and for **bundle** SITs such as "All Credential Types" - the bundle's own GUID isn't in the item data, only its constituents. |
 | `ItemMaxConfidence` | The strongest confidence of **any** SIT detected in the item. Always populated; this is the reliable signal for bundle sweeps. |
 
 To surface the most confident hits: filter `TargetConfidence` (or `ItemMaxConfidence` for bundles) to `3-High`, or sort that column descending.
@@ -59,12 +59,12 @@ To surface the most confident hits: filter `TargetConfidence` (or `ItemMaxConfid
 
 `SensitiveInfoTypes` lists the **GUIDs** of every SIT detected in an item. The worker enumerates the
 tenant's SITs once (`Get-DlpSensitiveInformationType`) to build a GUID → name map, then emits
-`SensitiveInfoTypeNames` — the friendly names in the same order — so the detection detail is readable
+`SensitiveInfoTypeNames` - the friendly names in the same order - so the detection detail is readable
 without manual lookups. A GUID with no matching name (e.g. a SIT deleted since the data was produced)
 falls back to printing the raw GUID, so nothing is silently dropped. These are SIT names only;
 `SensitivityLabel` and `TrainableClassifiers` GUIDs are left as-is.
 
-## Roll-up — `items_all.csv`
+## Roll-up - `items_all.csv`
 
 Concatenation of every per-tag `items_*.csv` (excluding `items_all.csv` itself). Schemas can vary across workloads (SPO/ODB rows have a real `FileUrl`, EXO rows don't), so the roll-up **column-unions** all per-tag files: it collects every property name across all rows and re-emits each row with that full column set, leaving missing fields blank.
 
@@ -82,9 +82,9 @@ Append-only, timestamped, one line per worker invocation:
 
 Status values:
 
-- `ok` — worker completed, per-tag CSV written (`rows=N` is the number of items)
-- `skip` — per-tag CSV already existed, worker not invoked (`exists`)
-- `fail` — worker threw, per-tag CSV not written; tag will retry on next run
+- `ok` - worker completed, per-tag CSV written (`rows=N` is the number of items)
+- `skip` - per-tag CSV already existed, worker not invoked (`exists`)
+- `fail` - worker threw, per-tag CSV not written; tag will retry on next run
 
 ## Sample output
 

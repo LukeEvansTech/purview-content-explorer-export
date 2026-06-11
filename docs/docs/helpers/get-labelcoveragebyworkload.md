@@ -1,6 +1,6 @@
 # Get-LabelCoverageByWorkload
 
-Compute sensitivity-label coverage per Microsoft 365 workload from a folder of per-tag CSV exports. Part of the `PurviewContentExplorerHelpers` module — it reads the exporter's CSV output and calls no Purview cmdlet.
+Compute sensitivity-label coverage per Microsoft 365 workload from a folder of per-tag CSV exports. Part of the `PurviewContentExplorerHelpers` module - it reads the exporter's CSV output and calls no Purview cmdlet.
 
 Everything is derived from row data, never from filenames:
 
@@ -57,5 +57,5 @@ One `PSCustomObject` (type name `PurviewContentExplorerHelpers.LabelCoverage`) p
 
 ## Notes
 
-- The denominator is every distinct item in the folder, so include whatever sweeps define "items worth labelling" — typically the SIT / classifier sweeps, with a Sensitivity sweep adding the most complete label signal.
+- The denominator is every distinct item in the folder, so include whatever sweeps define "items worth labelling" - typically the SIT / classifier sweeps, with a Sensitivity sweep adding the most complete label signal.
 - The `items_all.csv` roll-up is skipped (it duplicates every per-tag row) unless it is the only CSV in the folder. Files lacking the `TagType` / `Workload` columns and rows with no derivable item identity are ignored.

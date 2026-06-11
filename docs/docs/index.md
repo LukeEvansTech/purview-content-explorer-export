@@ -1,6 +1,6 @@
 # purview-content-explorer-export
 
-PowerShell tool for exporting **item-level data** from Microsoft Purview Content Explorer — one row per file/email — across all four Microsoft 365 workloads (Exchange, SharePoint, OneDrive, Teams) and across many tags (Sensitive Information Types, Sensitivity labels, Retention labels, Trainable Classifiers).
+PowerShell tool for exporting **item-level data** from Microsoft Purview Content Explorer - one row per file/email - across all four Microsoft 365 workloads (Exchange, SharePoint, OneDrive, Teams) and across many tags (Sensitive Information Types, Sensitivity labels, Retention labels, Trainable Classifiers).
 
 It wraps the [`Export-ContentExplorerData`](https://learn.microsoft.com/en-us/powershell/module/exchangepowershell/export-contentexplorerdata) cmdlet with the boring-but-essential plumbing: pagination, multi-workload fan-out, per-tag CSV files, a merged roll-up, skip-existing for resumable runs, and a CSV-driven include list so you can sweep only the SITs you actually care about.
 
@@ -18,7 +18,7 @@ Roughly the answer to **"which files in M365 contain unprotected credential mate
 | `TagType` | `SensitiveInformationType`, `Sensitivity`, `Retention`, or `TrainableClassifier` |
 | `TagName` | The label/SIT/classifier name (e.g. `Credit Card Number`) |
 | `Workload` | `EXO`, `ODB`, `SPO`, or `Teams` |
-| `FileUrl` | Full path to the file (SPO/ODB) — empty for EXO/Teams |
+| `FileUrl` | Full path to the file (SPO/ODB) - empty for EXO/Teams |
 | `FileName` | File name (SPO/ODB), email subject (EXO), or "Posted in #channel" (Teams) |
 | `UserCreated` / `UserModified` | Display name of creator / last modifier |
 | `LastModifiedTime` | UTC timestamp |

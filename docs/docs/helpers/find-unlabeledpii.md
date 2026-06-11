@@ -1,6 +1,6 @@
 # Find-UnlabeledPII
 
-Find items that a Purview classifier flagged as containing PII but that carry **no sensitivity label**. Part of the `PurviewContentExplorerHelpers` module — it reads the per-tag CSVs the exporter produced; it does not call any Purview cmdlet.
+Find items that a Purview classifier flagged as containing PII but that carry **no sensitivity label**. Part of the `PurviewContentExplorerHelpers` module - it reads the per-tag CSVs the exporter produced; it does not call any Purview cmdlet.
 
 Everything is derived from row data, never from filenames:
 
@@ -52,12 +52,12 @@ One `PSCustomObject` (type name `PurviewContentExplorerHelpers.UnlabeledPII`) pe
 | `Workload` | `EXO` / `ODB` / `SPO` / `Teams` |
 | `FileName` | Filename (SPO/ODB), email subject (EXO), or "Posted in #channel" (Teams) |
 | `FileUrl` | Full path to the file (SPO/ODB only; empty for EXO/Teams) |
-| `FileSourceUrl` | Site/mailbox URL — site root for SPO/ODB, the user's UPN for EXO/Teams |
+| `FileSourceUrl` | Site/mailbox URL - site root for SPO/ODB, the user's UPN for EXO/Teams |
 | `LastModifiedTime` | UTC timestamp, as exported |
 
 ## Notes
 
 - The `items_all.csv` roll-up is skipped (it duplicates every per-tag row) unless it is the only CSV in the folder. Files lacking a `TagType` column and rows with no derivable item identity are ignored.
 - Item-identity matching is case-insensitive, so URL-casing drift between sweeps does not produce false positives.
-- Because the per-row `SensitivityLabel` GUID marks labelled items, a Sensitivity sweep in the folder is not strictly required — but including one is still the most complete label signal.
+- Because the per-row `SensitivityLabel` GUID marks labelled items, a Sensitivity sweep in the folder is not strictly required - but including one is still the most complete label signal.
 - If no row matches the classifier(s), a warning is written and nothing is returned.
