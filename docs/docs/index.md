@@ -1,4 +1,4 @@
-# purview-content-explorer-export
+# Overview
 
 PowerShell tool for exporting **item-level data** from Microsoft Purview Content Explorer - one row per file/email - across all four Microsoft 365 workloads (Exchange, SharePoint, OneDrive, Teams) and across many tags (Sensitive Information Types, Sensitivity labels, Retention labels, Trainable Classifiers).
 
@@ -9,7 +9,7 @@ It wraps the [`Export-ContentExplorerData`](https://learn.microsoft.com/en-us/po
 
 ## What you get out
 
-For every `(TagType, TagName)` combination that has hits in your tenant, you get a CSV with one row per matching item. Columns include file paths, file names, creators, modifiers, last-modified timestamps, and JSON-encoded confidence-level match counts.
+For every `(TagType, TagName)` combination that has hits in your tenant, you get a CSV with one row per matching item. Columns include file paths, filenames, creators, modifiers, last-modified timestamps, and JSON-encoded confidence-level match counts.
 
 Roughly the answer to **"which files in M365 contain unprotected credential material"** for your tenant.
 
@@ -19,19 +19,24 @@ Roughly the answer to **"which files in M365 contain unprotected credential mate
 | `TagName` | The label/SIT/classifier name (e.g. `Credit Card Number`) |
 | `Workload` | `EXO`, `ODB`, `SPO`, or `Teams` |
 | `FileUrl` | Full path to the file (SPO/ODB) - empty for EXO/Teams |
-| `FileName` | File name (SPO/ODB), email subject (EXO), or "Posted in #channel" (Teams) |
+| `FileName` | Filename (SPO/ODB), email subject (EXO), or "Posted in #channel" (Teams) |
 | `UserCreated` / `UserModified` | Display name of creator / last modifier |
 | `LastModifiedTime` | UTC timestamp |
 | `SensitiveInfoTypesData` | JSON array with confidence-level match counts per SIT |
 
-Full schema documented at [Output schema](output-schema.md). A 15-row sample lives in `examples/items_all.sample.csv` in the repo.
+Full schema documented at [Output schema](output-schema.md). A 15-row sample lives in `examples/items_all.sample.csv` in the repository.
 
 ## Where to next
 
 - **First time?** → [Quick start](quickstart.md)
 - **Want to sweep only specific SITs?** → [Common scenarios](usage.md)
 - **A long sweep got interrupted?** → [Recovery & resumability](recovery.md)
+- **Already have exports and want answers?** → [Reporting helpers](helpers/find-unlabeledpii.md) - find unlabelled PII, label coverage by workload, and deltas between two exports
 - **Hit an error?** → [Troubleshooting](troubleshooting.md)
+
+## Reporting helpers
+
+The exporter is the *producer* - it writes raw per-tag CSVs. The bundled `PurviewContentExplorerHelpers` module (`helpers/`) is the *consumer*: it reads that output to answer common reporting questions, without calling any Purview cmdlet. See [`Find-UnlabeledPII`](helpers/find-unlabeledpii.md), [`Get-LabelCoverageByWorkload`](helpers/get-labelcoveragebyworkload.md), and [`Compare-ExportDelta`](helpers/compare-exportdelta.md).
 
 ## Why this exists
 

@@ -9,11 +9,15 @@ purview-content-explorer-export/
   Export-CEItems.ps1          # worker — one (TagType, TagName), N workloads
   Invoke-CESweep.ps1          # orchestrator — enumerate, filter, dispatch, roll-up
   lib/CEHelpers.psm1          # pure helpers (offline-testable)
-  tests/CEHelpers.Tests.ps1   # Pester unit tests
+  tests/CEHelpers.Tests.ps1   # Pester unit tests (exporter helpers)
+  tests/Helpers.Tests.ps1     # Pester unit tests (helpers/ reporting module)
   scripts/match-sits.ps1      # canonical-name fuzzy matcher
   examples/
     items_all.sample.csv               # synthetic sample output
     names-credentials.example.csv      # sample curated SIT list (52 names)
+  helpers/                    # PurviewContentExplorerHelpers — reporting module over the CSV output
+    src/                      #   module (psd1/psm1 + Public/ + Private/)
+    README.md
   output/                     # gitignored, created at runtime
 ```
 
@@ -22,32 +26,41 @@ The orchestrator imports the worker as a script (`& $workerScript ...`) per tag,
 ## Running tests locally
 
 ```powershell
+Invoke-Pester ./tests -CI
+# Expected: Tests Passed: 61
+
+# Or a single file:
 Invoke-Pester ./tests/CEHelpers.Tests.ps1 -CI
-# Expected: Tests Passed: 29
+# Expected: Tests Passed: 34
 ```
 
-Only pure-logic helpers (`Get-CESafeName`, `Test-CETagNameFilter`, `Get-CETagTypeEnumeration`) are unit-tested. Cmdlet integration is covered by manual smoke testing against a real M365 tenant - no offline equivalent exists for `Export-ContentExplorerData` and mocking it would just verify the mock.
+The exporter's pure-logic helpers (`Get-CESafeName`, `Test-CETagNameFilter`,
+`Get-CETagTypeEnumeration`, `Get-CEConfidenceSummary`, `Get-CESitName`) are unit-tested in
+`tests/CEHelpers.Tests.ps1`, and the `helpers/` reporting module in `tests/Helpers.Tests.ps1`
+(synthetic CSV fixtures on `TestDrive`). Cmdlet integration is covered by manual smoke testing
+against a real M365 tenant - no offline equivalent exists for `Export-ContentExplorerData` and
+mocking it would just verify the mock.
 
 ## Building docs locally
 
 ```bash
 pip install -r docs/requirements.txt
-mkdocs serve
-# open http://127.0.0.1:8000/
+zensical serve
+# open http://localhost:8000/
 ```
 
 ## CI
 
-Two workflows:
+Three workflows:
 
-- **`test.yml`** - Pester on Ubuntu / macOS / Windows + parse-check on every script
+- **`test.yml`** - Pester on Ubuntu / macOS / Windows + parse-check on every script (top-level scripts and the `helpers/` module source)
 - **`lint.yml`** - Super-Linter v8 (PSScriptAnalyzer / yamllint / markdownlint / gitleaks / actions-lint)
 - **`docs.yml`** - Builds and deploys this site to GitHub Pages on every push to main
 
 ## House rules
 
 1. Keep `Set-StrictMode -Version Latest` and `$ErrorActionPreference = 'Stop'` in both top-level scripts.
-2. Add Pester tests for any new pure-logic helper added to `lib/CEHelpers.psm1`.
+2. Add Pester tests for any new pure logic: `lib/CEHelpers.psm1` helpers go in `tests/CEHelpers.Tests.ps1`, `helpers/` module functions in `tests/Helpers.Tests.ps1`.
 3. Don't introduce a dependency on a third-party PowerShell module that isn't already required (e.g. don't pull in `ImportExcel` - read CSVs).
 4. If you fix a footgun, add a one-line note in [Troubleshooting](troubleshooting.md) so the next person doesn't hit it.
 5. PRs should be green on `test.yml` and `lint.yml` before review.

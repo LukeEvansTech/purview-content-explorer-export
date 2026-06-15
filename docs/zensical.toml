@@ -2,7 +2,7 @@
 # https://zensical.org/docs/
 
 [project]
-site_name = "purview-content-explorer-export"
+site_name = "Purview Content Explorer Export"
 site_description = "PowerShell tool for exporting item-level data from Microsoft Purview Content Explorer across EXO/SPO/ODB/Teams"
 site_author = "Luke Evans"
 site_url = "https://lukeevanstech.github.io/purview-content-explorer-export/"

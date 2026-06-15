@@ -31,8 +31,8 @@ chmod +x ./Invoke-CESweep.ps1 ./Export-CEItems.ps1
 Verify Pester tests still pass:
 
 ```bash
-pwsh -NoProfile -Command "Invoke-Pester ./tests/CEHelpers.Tests.ps1 -CI"
-# Expected: Tests Passed: 29
+pwsh -NoProfile -Command "Invoke-Pester ./tests -CI"
+# Expected: Tests Passed: 61
 ```
 
 ## Run
