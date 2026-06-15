@@ -13,8 +13,9 @@ then for each name in the input CSV tries:
   2. Substring containment in either direction
   3. Levenshtein distance (<= 30% of name length)
 
-Results are printed and exported to /tmp/sit_mappings.csv with a Suggested
-column you can review and apply manually.
+Results are printed and exported to a sit_mappings.csv in the system temp
+folder (override with -OutFile) with a Suggested column you can review and
+apply manually. The resolved output path is printed at the end.
 
 .EXAMPLE
 ./Find-CESitMatch.ps1 -NamesFile ./my-sits.csv
@@ -23,10 +24,17 @@ param(
     [Parameter(Mandatory)]
     [string]$NamesFile,
     [string]$NamesColumn = 'Name',
-    [string]$OutFile = '/tmp/sit_mappings.csv'
+    [string]$OutFile
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+# Default the output path to the OS temp folder; the literal /tmp does not
+# exist on the Windows PowerShell 5.1 deployment target. Resolved in the body
+# (not the param() default) per the repo's PS 5.1 conventions.
+if (-not $OutFile) {
+    $OutFile = Join-Path ([System.IO.Path]::GetTempPath()) 'sit_mappings.csv'
+}
 
 # Connect if needed
 $connected = $false
@@ -41,7 +49,6 @@ if (-not $connected) { Connect-IPPSSession -ShowBanner:$false | Out-Null }
 # All tenant SIT names
 $tenant = @(Get-DlpSensitiveInformationType | Select-Object -ExpandProperty Name)
 Write-Host "tenant has $($tenant.Count) SIT(s)"
-$tenant | Set-Content /tmp/tenant_sits.txt
 
 function Get-Normalized([string]$s) { ($s -replace '[^A-Za-z0-9]', '').ToLower() }
 

@@ -17,13 +17,13 @@ Helper. Connects to your tenant, dumps the canonical SIT list, then for each nam
 |---|---|---|---|
 | `-NamesFile` | `string` | required | Path to a CSV containing the source names |
 | `-NamesColumn` | `string` | `Name` | Which column to read names from |
-| `-OutFile` | `string` | `/tmp/sit_mappings.csv` | Where to write the mapping CSV |
+| `-OutFile` | `string` | `sit_mappings.csv` in the OS temp folder | Where to write the mapping CSV (the resolved path is printed at the end) |
 
 ## Example
 
 ```powershell
 ./scripts/Find-CESitMatch.ps1 -NamesFile ./my-sits.csv
-# 50 of 315 names are non-canonical → printed table + /tmp/sit_mappings.csv
+# 50 of 315 names are non-canonical → printed table + sit_mappings.csv in the temp folder
 ```
 
 ## How matching works

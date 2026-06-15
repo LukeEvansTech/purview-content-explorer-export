@@ -211,7 +211,8 @@ The companion script [`scripts/Find-CESitMatch.ps1`](scripts/Find-CESitMatch.ps1
 
 ```powershell
 ./scripts/Find-CESitMatch.ps1 -NamesFile ./my-sits.csv
-# Inspect /tmp/sit_mappings.csv for the suggestions, hand-curate, then save back.
+# Inspect the printed sit_mappings.csv path (system temp folder by default) for
+# the suggestions, hand-curate, then save back.
 ```
 
 ---

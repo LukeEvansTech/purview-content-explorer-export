@@ -40,8 +40,9 @@ The companion script `scripts/Find-CESitMatch.ps1` connects to your tenant, dump
 
 ```powershell
 ./scripts/Find-CESitMatch.ps1 -NamesFile ./my-sits.csv
-# Inspect the printed suggestions and /tmp/sit_mappings.csv (configurable
-# with -OutFile), hand-curate, then save back to your source CSV.
+# Inspect the printed suggestions and the sit_mappings.csv it writes to your
+# temp folder (path is printed; configurable with -OutFile), hand-curate,
+# then save back to your source CSV.
 ```
 
 The suggestion list will include the match type so you can see how confident each one is:
