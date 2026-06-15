@@ -207,10 +207,10 @@ A common gotcha: SIT lists exported from Microsoft documentation, planning sprea
 
 The orchestrator's `-NameLike` is case-insensitive (PowerShell `-like`), so case differences resolve automatically. But "All credentials" vs "All Credential Types" is a real semantic mismatch and won't match.
 
-The companion script [`scripts/match-sits.ps1`](scripts/match-sits.ps1) helps fix this. It connects to your tenant, dumps the canonical SIT list, and for each name in your input CSV suggests the closest tenant match using normalized-exact, substring, and Levenshtein-distance fallbacks:
+The companion script [`scripts/Find-CESitMatch.ps1`](scripts/Find-CESitMatch.ps1) helps fix this. It connects to your tenant, dumps the canonical SIT list, and for each name in your input CSV suggests the closest tenant match using normalized-exact, substring, and Levenshtein-distance fallbacks:
 
 ```powershell
-./scripts/match-sits.ps1 -NamesFile ./my-sits.csv
+./scripts/Find-CESitMatch.ps1 -NamesFile ./my-sits.csv
 # Inspect /tmp/sit_mappings.csv for the suggestions, hand-curate, then save back.
 ```
 
@@ -307,7 +307,7 @@ purview-content-explorer-export/
   lib/CEHelpers.psm1          # pure helpers (offline-testable)
   tests/CEHelpers.Tests.ps1   # Pester unit tests (exporter helpers)
   tests/Helpers.Tests.ps1     # Pester unit tests (helpers/ reporting module)
-  scripts/match-sits.ps1      # canonical-name matcher for non-canonical CSVs
+  scripts/Find-CESitMatch.ps1 # canonical-name matcher for non-canonical CSVs
   examples/
     items_all.sample.csv               # synthetic sample output
     names-credentials.example.csv      # sample curated SIT list (52 names)

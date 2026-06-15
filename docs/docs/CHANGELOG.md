@@ -10,7 +10,7 @@ Prerelease working state. Tag `v1.0.0` once the design has stabilised in real-te
 
 - Item-level export via `Export-CEItems.ps1` (worker) and `Invoke-CESweep.ps1` (orchestrator)
 - `-NamesFile` CSV-driven include list with unmatched-name reporting
-- `match-sits.ps1` helper for canonical-name suggestions (normalized-exact / substring / Levenshtein)
+- `Find-CESitMatch.ps1` helper for canonical-name suggestions (normalized-exact / substring / Levenshtein)
 - Pester unit tests for the pure-logic helpers (run on Ubuntu / macOS / Windows in CI)
 - GitHub Actions workflows for tests, super-linter, and docs deploy
 - MkDocs Material documentation site

@@ -1,11 +1,11 @@
-# match-sits.ps1
+# Find-CESitMatch.ps1
 
 Helper. Connects to your tenant, dumps the canonical SIT list, then for each name in your input CSV suggests the closest tenant match using normalized-exact, substring, and Levenshtein-distance fallbacks. Useful when adapting an externally-sourced SIT list (a planning spreadsheet, a Microsoft docs export) to match the canonical names your tenant actually returns.
 
 ## Synopsis
 
 ```powershell
-./scripts/match-sits.ps1
+./scripts/Find-CESitMatch.ps1
     -NamesFile <string>
     [-NamesColumn <string>]
     [-OutFile <string>]
@@ -22,7 +22,7 @@ Helper. Connects to your tenant, dumps the canonical SIT list, then for each nam
 ## Example
 
 ```powershell
-./scripts/match-sits.ps1 -NamesFile ./my-sits.csv
+./scripts/Find-CESitMatch.ps1 -NamesFile ./my-sits.csv
 # 50 of 315 names are non-canonical → printed table + /tmp/sit_mappings.csv
 ```
 

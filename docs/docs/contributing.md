@@ -11,7 +11,7 @@ purview-content-explorer-export/
   lib/CEHelpers.psm1          # pure helpers (offline-testable)
   tests/CEHelpers.Tests.ps1   # Pester unit tests (exporter helpers)
   tests/Helpers.Tests.ps1     # Pester unit tests (helpers/ reporting module)
-  scripts/match-sits.ps1      # canonical-name fuzzy matcher
+  scripts/Find-CESitMatch.ps1 # canonical-name fuzzy matcher
   examples/
     items_all.sample.csv               # synthetic sample output
     names-credentials.example.csv      # sample curated SIT list (52 names)

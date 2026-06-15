@@ -17,7 +17,7 @@ Results are printed and exported to /tmp/sit_mappings.csv with a Suggested
 column you can review and apply manually.
 
 .EXAMPLE
-./match-sits.ps1 -NamesFile ./my-sits.csv
+./Find-CESitMatch.ps1 -NamesFile ./my-sits.csv
 #>
 param(
     [Parameter(Mandatory)]

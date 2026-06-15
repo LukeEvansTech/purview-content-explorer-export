@@ -66,4 +66,4 @@ Use a `-NamesFile`. The orchestrator reads the `Name` column and treats each val
 
 ## Names from my CSV don't match the tenant
 
-See [Working with non-canonical names](name-matching.md). The `match-sits.ps1` helper suggests canonical replacements.
+See [Working with non-canonical names](name-matching.md). The `Find-CESitMatch.ps1` helper suggests canonical replacements.
