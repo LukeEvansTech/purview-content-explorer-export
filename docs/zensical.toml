@@ -65,7 +65,7 @@ Reference = [
   { "Output schema" = "output-schema.md" },
   { "Invoke-CESweep.ps1" = "invoke-cesweep.md" },
   { "Export-CEItems.ps1" = "export-ceitems.md" },
-  { "match-sits.ps1" = "match-sits.md" },
+  { "Find-CESitMatch.ps1" = "find-cesitmatch.md" },
 ]
 
 [[nav]]

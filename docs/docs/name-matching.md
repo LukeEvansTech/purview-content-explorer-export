@@ -30,16 +30,16 @@ WARNING: 50 of 315 name(s) from '/path/to/sits.csv' did not match any tenant tag
 
 That's your hit-list of corrections to make.
 
-## Using `match-sits.ps1` to suggest fixes
+## Using `Find-CESitMatch.ps1` to suggest fixes
 
-The companion script `scripts/match-sits.ps1` connects to your tenant, dumps the canonical SIT list, and for each name in your input CSV suggests the closest tenant match using:
+The companion script `scripts/Find-CESitMatch.ps1` connects to your tenant, dumps the canonical SIT list, and for each name in your input CSV suggests the closest tenant match using:
 
 1. **Normalized-exact** - case-insensitive, no punctuation
 2. **Substring** - one name contains the other after normalization
 3. **Levenshtein distance** - accepts when the edit distance is ≤ 30% of the source length
 
 ```powershell
-./scripts/match-sits.ps1 -NamesFile ./my-sits.csv
+./scripts/Find-CESitMatch.ps1 -NamesFile ./my-sits.csv
 # Inspect the printed suggestions and /tmp/sit_mappings.csv (configurable
 # with -OutFile), hand-curate, then save back to your source CSV.
 ```
