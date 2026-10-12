@@ -47,20 +47,20 @@ repo_name = "LukeEvansTech/purview-content-explorer-export"
 edit_uri = "edit/main/docs/docs"
 
 # Navigation Structure
-[[nav]]
+[[project.nav]]
 Home = "index.md"
 
-[[nav]]
+[[project.nav]]
 "Quick start" = "quickstart.md"
 
-[[nav]]
+[[project.nav]]
 Usage = [
   { "Common scenarios" = "usage.md" },
   { "Working with non-canonical names" = "name-matching.md" },
   { "Recovery & resumability" = "recovery.md" },
 ]
 
-[[nav]]
+[[project.nav]]
 Reference = [
   { "Output schema" = "output-schema.md" },
   { "Invoke-CESweep.ps1" = "invoke-cesweep.md" },
@@ -68,36 +68,18 @@ Reference = [
   { "Find-CESitMatch.ps1" = "find-cesitmatch.md" },
 ]
 
-[[nav]]
+[[project.nav]]
 Helpers = [
   { "Find-UnlabeledPII" = "helpers/find-unlabeledpii.md" },
   { "Get-LabelCoverageByWorkload" = "helpers/get-labelcoveragebyworkload.md" },
   { "Compare-ExportDelta" = "helpers/compare-exportdelta.md" },
 ]
 
-[[nav]]
+[[project.nav]]
 Troubleshooting = "troubleshooting.md"
 
-[[nav]]
+[[project.nav]]
 Contributing = "contributing.md"
 
-[[nav]]
+[[project.nav]]
 Changelog = "CHANGELOG.md"
-
-# Markdown Extensions
-[markdown_extensions]
-admonition = {}
-attr_list = {}
-md_in_html = {}
-tables = {}
-toc = { permalink = true }
-
-[markdown_extensions.pymdownx]
-highlight = { anchor_linenums = true, line_spans = "__span", pygments_lang_class = true }
-inlinehilite = {}
-snippets = {}
-details = {}
-tabbed = { alternate_style = true }
-
-[markdown_extensions.pymdownx.superfences]
-custom_fences = [{ name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" }]
